@@ -5,7 +5,7 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 
 # Initialize Firebase
-service_account_info = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON")
+service_account_info = json.loads(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON"))
 cred = credentials.Certificate(service_account_info)
 firebase_admin.initialize_app(cred)
 
