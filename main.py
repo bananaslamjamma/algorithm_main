@@ -33,7 +33,7 @@ async def book_desk(data: dict):
             "name": data.get("name", "")
         }
         
-        doc_ref = cred.collection("bookings").document(f"booking_{user_id}")
+        doc_ref = cred.collection("bookings").document(f"booking_1")
         doc_ref.set(booking_data)  # Using set() to overwrite any existing document with the same ID
         
         return {"message": "Booking request received"}
