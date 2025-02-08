@@ -10,14 +10,13 @@ from fastapi import HTTPException
 service_account_info = json.loads(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON"))
 cred = credentials.Certificate(service_account_info)
 firebase_admin.initialize_app(cred)
+db = firestore.client()
 
 
 app = FastAPI()
 print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON"))
 
 logging.basicConfig(level=logging.INFO)
-# Init Firestore
-db = firestore.client(credentials=cred)
 
 @app.post("/book")
 async def book_desk(data: dict):
