@@ -3,7 +3,7 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 
 # Initialize Firebase
-cred = credentials.Certificate("../secrets/serviceAccountKey.json")
+cred = credentials.Certificate("GOOGLE_APPLICATION_CREDENTIALS_JSON")
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
