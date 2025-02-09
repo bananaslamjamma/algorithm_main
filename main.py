@@ -23,6 +23,7 @@ async def book_desk(data: dict):
     try:
         user_id = data.get("user_id")
         resource_id = data.get("resource_id")
+        name = data.get("name")
         if not user_id or not resource_id:
             raise HTTPException(status_code=400, detail="Missing user_id or resource_id")
         
@@ -31,7 +32,7 @@ async def book_desk(data: dict):
             "user_id": user_id,
             "resource_id": resource_id,
             "status": data.get("status", "pending"),
-            "name": data.get("name", "")
+            "name": name
         }
         
         doc_ref = db.collection("bookings").document("booking_1")
