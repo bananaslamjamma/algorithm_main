@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 from fastapi import FastAPI
 import firebase_admin
 from firebase_admin import credentials, firestore
@@ -18,5 +19,24 @@ logging.basicConfig(level=logging.INFO)
 
 @app.post("/book")
 async def book_desk(data: dict):
-    doc_ref = db.collection("users").document("alovelace")
-    doc_ref.set({"first": "Ada", "last": "Lovelace", "born": 1815})
+    sys.stdout.write("fuck this")
+    try:
+        user_id = data.get("user_id")
+        resource_id = data.get("resource_id")
+        if not user_id or not resource_id:
+            raise HTTPException(status_code=400, detail="Missing user_id or resource_id")
+        
+        # Add data to Firestore
+        booking_data = {
+            "user_id": user_id,
+            "resource_id": resource_id,
+            "status": data.get("status", "pending"),
+            "name": data.get("name", "")
+        }
+        
+        doc_ref = db.collection("bookings").document("booking_1")
+        doc_ref.set(booking_data)  # Using set() to overwrite any existing document with the same ID
+        
+        return {"message": "Booking request received"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
