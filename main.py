@@ -91,6 +91,7 @@ async def process_booking_queue(resource_id):
         #"name": name
         }
     print("Wrote into spaces DB!")
+    # TODO just create the doc id, incase its not there for some reason
     doc_ref = db.collection("spaces").document(resource_id)
     doc_ref.update(space_data)  # Using set() to overwrite any existing document with the same ID
     
@@ -164,7 +165,7 @@ async def book_desk(data: dict, background_tasks: BackgroundTasks):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-
+## OLD
 def defunct(data: dict, background_tasks: BackgroundTasks):
     try:
         user_id = data.get("user_id")
@@ -184,11 +185,11 @@ def defunct(data: dict, background_tasks: BackgroundTasks):
             "name": name
         }
         
+
         doc_ref = db.collection("bookings").document(user_id)
-        doc_ref.set(booking_data)  # Using set() to overwrite any existing document with the same ID
-         # Check if this is the only request for the resource
-        #existing_requests = list(db.collection("bookings").where("resource_id", "==", resource_id).stream())
-        
+        doc_ref.set(booking_data)  
+
+    
         # Else, we have stuff in queue to process
         #background_tasks.add_task(process_competing_bookings, resource_id)
         return {"message": "Booking request received, waiting for priority resolution"}
