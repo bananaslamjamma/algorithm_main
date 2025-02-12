@@ -90,6 +90,8 @@ async def book_desk(data: dict, background_tasks: BackgroundTasks):
         karma_points = data.get("karma_points", 1000)
         if not user_id or not resource_id:
             raise HTTPException(status_code=400, detail="Missing user_id or resource_id")
+        
+        print("Booking Request Received!")
         # Check if the resource is already booked
         existing_booking = (
             db.collection("bookings")
@@ -99,6 +101,7 @@ async def book_desk(data: dict, background_tasks: BackgroundTasks):
         )
 
         if any(existing_booking):  # If any approved booking exists
+            print("Resource already booked!")
             return {"message": "Booking failed. Resource already booked.", "status": "denied"}
         
         # Assign Firestore server timestamp
