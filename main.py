@@ -86,6 +86,7 @@ async def process_booking_queue(resource_id):
     # clean up the queue
     del booking_queues[resource_id]
     print("Finished, cleaning up...")
+    return best_request
 
 
 
@@ -115,7 +116,17 @@ async def book_desk(data: dict, background_tasks: BackgroundTasks):
             "resource_id": resource_id,
             "karma_points": karma_points,
             "timestamp": firestore.SERVER_TIMESTAMP,
-            #"status": "pending",
+            "status": "pending",
+            "timeout": timeout
+            #"name": name
+        }
+        
+        space_data = {
+            "user_id": user_id,
+            "resource_id": resource_id,
+            "karma_points": karma_points,
+            "timestamp": firestore.SERVER_TIMESTAMP,
+            "status": "pending",
             "timeout": timeout
             #"name": name
         }
@@ -135,6 +146,9 @@ async def book_desk(data: dict, background_tasks: BackgroundTasks):
         # start a background task to process bookings after 10 seconds
         if resource_id not in booking_queues:
             booking_queues[resource_id] = asyncio.create_task(process_booking_queue(resource_id))
+            value = await booking_queues
+            print("this is the winner " ,  value)
+            
 
         return {"message": "Booking request received"}
 
