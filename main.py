@@ -81,13 +81,13 @@ async def process_booking_queue(resource_id):
             db.collection("bookings").document(other_request["id"]).delete()
             
     # update the DB so that HA devices can scan the change        
-    await update_space_data(resource_id, best_request)
+    update_space_data(resource_id, best_request)
     
     # clean up the queue
     del booking_queues[resource_id]
     print("Finished, cleaning up...")
 
-async def update_space_data(resource_id, best_request):
+def update_space_data(resource_id, best_request):
     doc_ref = db.collection("spaces").document(resource_id)
     doc = doc_ref.get()
     
