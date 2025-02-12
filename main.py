@@ -82,11 +82,23 @@ async def process_booking_queue(resource_id):
             print("User won! " , other_request["id"])
             db.collection("bookings").document(other_request["id"]).delete()
     print("I ATE SHIT 444")
+
+    #put it in a diff function
+    space_data = {
+        # change this to be user booked
+        "user_id": best_request["id"],
+        "date_booked": firestore.SERVER_TIMESTAMP,
+        "status": "authorized",
+        "timeout": best_request["timeout"]
+        #"name": name
+        }
+    
+    doc_ref = db.collection("spaces").document(resource_id)
+    doc_ref.set(space_data)  # Using set() to overwrite any existing document with the same ID
     
     # clean up the queue
     del booking_queues[resource_id]
     print("Finished, cleaning up...")
-    return best_request
 
 
 
@@ -146,8 +158,6 @@ async def book_desk(data: dict, background_tasks: BackgroundTasks):
         # start a background task to process bookings after 10 seconds
         if resource_id not in booking_queues:
             booking_queues[resource_id] = asyncio.create_task(process_booking_queue(resource_id))
-            value = await booking_queues
-            print("this is the winner " ,  value)
             
 
         return {"message": "Booking request received"}
