@@ -20,7 +20,7 @@ app = FastAPI()
 logging.basicConfig(level=logging.INFO)
 
 async def process_competing_bookings(resource_id: str):
-    sys.stdout.write("Listening for Requests... \n")
+    sys.stdout.write("Request Submitted! \n")
 
     # Wait 10 seconds while printing "Listening for requests..."
     start_time = time.time()
@@ -38,6 +38,8 @@ async def process_competing_bookings(resource_id: str):
     for request in requests:
         data = request.to_dict()
         user_id = data["user_id"]
+        print("Processing User: ")
+        print(user_id)
 
         # Count number of requests per user
         user_request_count[user_id] = user_request_count.get(user_id, 0) + 1
@@ -52,19 +54,22 @@ async def process_competing_bookings(resource_id: str):
             penalty = (count - 1) * 50  # Deduct 50 points per extra request
             user_requests[user_id]["karma_points"] = max(0, user_requests[user_id]["karma_points"] - penalty)
 
-    # Convert to priority queue
-    heap = [(-data["karma_points"], data) for data in user_requests.values()]
+    # Convert to priority queue with (-karma_points, timestamp)
+    heap = [(-data["karma_points"], data["timestamp"], data) for data in user_requests.values()]
     heapq.heapify(heap)
 
     if heap:
-        _, best_request = heapq.heappop(heap)  # Highest priority request wins
+        _, _, best_request = heapq.heappop(heap)  # Highest priority request with earliest timestamp wins
 
-        # Approve best request
-        db.collection("bookings").document(best_request["user_id"]).update({"status": "approved"})
+        # Approve the best request
+        db.collection("bookings").document(best_request["doc_id"]).update({"status": "approved"})
 
-        # Reject all others
-        for _, other_request in heap:
-            db.collection("bookings").document(other_request["user_id"]).update({"status": "rejected"})
+        # Delete all other requests
+        while heap:
+            _, _, other_request = heapq.heappop(heap)
+            db.collection("bookings").document(other_request["doc_id"]).delete()
+                
+        print("Requests queue finished!")
 
 
 @app.post("/book")
