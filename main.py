@@ -111,7 +111,7 @@ async def book_desk(data: dict, background_tasks: BackgroundTasks):
             "resource_id": resource_id,
             "karma_points": karma_points,
             "timestamp": firestore.SERVER_TIMESTAMP,
-            "status": "pending",
+            #"status": "pending",
             "timeout": timeout
             #"name": name
         }
