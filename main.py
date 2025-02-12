@@ -68,20 +68,18 @@ async def process_booking_queue(resource_id):
     heapq.heapify(heap)
     print("Processing Queue...")
     if heap:
-        print("I ATE SHIT")
+        print("Winner Processing")
         _, _, best_request = heapq.heappop(heap)
         print(best_request)
-        print("I ATE SHIT 22")
         # Approve the best request
         db.collection("bookings").document(best_request["id"]).update({"status": "approved"})
         print("User won! " , best_request["id"])
 
         # reject and delete all the loser requests stored
         for _, _, other_request in heap:
-            print("I ATE SHIT 3333")
-            print("User won! " , other_request["id"])
+            print("User lost! " , other_request["id"])
             db.collection("bookings").document(other_request["id"]).delete()
-    print("I ATE SHIT 444")
+
 
     #put it in a diff function
     space_data = {
@@ -92,9 +90,9 @@ async def process_booking_queue(resource_id):
         "timeout": best_request["timeout"]
         #"name": name
         }
-    
+    print("Wrote into spaces DB!")
     doc_ref = db.collection("spaces").document(resource_id)
-    doc_ref.set(space_data)  # Using set() to overwrite any existing document with the same ID
+    doc_ref.update(space_data)  # Using set() to overwrite any existing document with the same ID
     
     # clean up the queue
     del booking_queues[resource_id]
