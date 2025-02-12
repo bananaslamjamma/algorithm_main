@@ -19,63 +19,92 @@ db = firestore.client()
 app = FastAPI()
 logging.basicConfig(level=logging.INFO)
 
-async def process_competing_bookings(resource_id: str):
-    sys.stdout.write("Request Submitted! \n")
+PENDING_TIME = 10  # Time window to collect requests (seconds)
+booking_queues = {}  # Dictionary to track queues per resource
 
-    # Wait 10 seconds while printing "Listening for requests..."
-    start_time = time.time()
-    while time.time() - start_time < 10:
-        print("Listening for Requests...")
-        await asyncio.sleep(1)  # Sleep for 1 second before printing again
-
+async def process_booking_queue(resource_id):
+    """Processes the booking queue after the time window ends."""
+    await asyncio.sleep(PENDING_TIME)
+    
+    print("Fetching Requests Stored...")
     # Fetch all requests for this resource
-    requests = list(db.collection("bookings").where(filter=("resource_id", "==", resource_id)).stream())
+    requests = list(db.collection("bookings").where("resource_id", "==", resource_id).stream())
 
-    # Multiple users competing: Apply priority system
+    if not requests:
+        return  # No requests to process
+
     user_requests = {}
     user_request_count = {}
 
+    # Process requests
+    print("Processing Requests Stored...")
     for request in requests:
         data = request.to_dict()
         user_id = data["user_id"]
-        print("Processing User: ")
-        print(user_id)
+        data["id"] = request.id  # Store document ID
+        print("User: ")
+        print(request.id)
 
-        # Count number of requests per user
+        # Track number of requests per user
         user_request_count[user_id] = user_request_count.get(user_id, 0) + 1
 
         # Keep only the latest request per user
         if user_id not in user_requests or data["timestamp"] > user_requests[user_id]["timestamp"]:
             user_requests[user_id] = data
-            
-    print("Checking for Penalties")
+
     # Apply spam penalty
     for user_id, count in user_request_count.items():
         if count > 1:
             penalty = (count - 1) * 50  # Deduct 50 points per extra request
             user_requests[user_id]["karma_points"] = max(0, user_requests[user_id]["karma_points"] - penalty)
 
-    print("Calculating Priority...")
-    # Convert to priority queue with (-karma_points, timestamp)
+    # Convert to priority queue (Higher karma wins, if tie -> earliest timestamp wins)
     heap = [(-data["karma_points"], data["timestamp"], data) for data in user_requests.values()]
     heapq.heapify(heap)
 
     if heap:
-        _, _, best_request = heapq.heappop(heap)  # Highest priority request with earliest timestamp wins
+        _, _, best_request = heapq.heappop(heap)  # Highest priority request wins
 
         # Approve the best request
-        db.collection("bookings").document(best_request["doc_id"]).update({"status": "approved"})
+        db.collection("bookings").document(best_request["id"]).update({"status": "approved"})
 
-        # Delete all other requests
-        while heap:
-            _, _, other_request = heapq.heappop(heap)
-            db.collection("bookings").document(other_request["doc_id"]).delete()
-                
-        print("Requests queue finished!")
+        # Reject and delete all others
+        for _, _, other_request in heap:
+            db.collection("bookings").document(other_request["id"]).delete()
+
+    # Cleanup
+    del booking_queues[resource_id]
+
 
 
 @app.post("/book")
 async def book_desk(data: dict, background_tasks: BackgroundTasks):
+    try:
+        user_id = data.get("user_id")
+        resource_id = data.get("resource_id")
+        name = data.get("name")
+        karma_points = data.get("karma_points", 1000)
+        if not user_id or not resource_id:
+            raise HTTPException(status_code=400, detail="Missing user_id or resource_id")
+        
+        # Assign Firestore server timestamp
+        data["timestamp"] = firestore.SERVER_TIMESTAMP
+
+        # Store request in Firestore
+        db.collection("bookings").add(data)
+
+        # Start a background task to process bookings after 10 seconds
+        if resource_id not in booking_queues:
+            booking_queues[resource_id] = asyncio.create_task(process_booking_queue(resource_id))
+
+        return {"message": "Booking request received"}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+
+def defunct(data: dict, background_tasks: BackgroundTasks):
     try:
         user_id = data.get("user_id")
         resource_id = data.get("resource_id")
@@ -100,7 +129,7 @@ async def book_desk(data: dict, background_tasks: BackgroundTasks):
         #existing_requests = list(db.collection("bookings").where("resource_id", "==", resource_id).stream())
         
         # Else, we have stuff in queue to process
-        background_tasks.add_task(process_competing_bookings, resource_id)
+        #background_tasks.add_task(process_competing_bookings, resource_id)
         return {"message": "Booking request received, waiting for priority resolution"}
 
     except Exception as e:
