@@ -93,7 +93,7 @@ async def update_space_data(resource_id, best_request):
     
     if not doc.exists:
         # Create the document with a default structure
-        await doc_ref.set({"resource_id": resource_id})  # Creates an empty document
+        await doc_ref.set(resource_id)  # Creates an empty document
         
     space_data = {
         # change this to be user booked
