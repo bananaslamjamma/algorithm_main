@@ -29,7 +29,7 @@ async def process_competing_bookings(resource_id: str):
         await asyncio.sleep(1)  # Sleep for 1 second before printing again
 
     # Fetch all requests for this resource
-    requests = list(db.collection("bookings").where("resource_id", "==", resource_id).stream())
+    requests = list(db.collection("bookings").where(filter=("resource_id", "==", resource_id)).stream())
 
     # Multiple users competing: Apply priority system
     user_requests = {}
@@ -47,13 +47,15 @@ async def process_competing_bookings(resource_id: str):
         # Keep only the latest request per user
         if user_id not in user_requests or data["timestamp"] > user_requests[user_id]["timestamp"]:
             user_requests[user_id] = data
-
+            
+    print("Checking for Penalties")
     # Apply spam penalty
     for user_id, count in user_request_count.items():
         if count > 1:
             penalty = (count - 1) * 50  # Deduct 50 points per extra request
             user_requests[user_id]["karma_points"] = max(0, user_requests[user_id]["karma_points"] - penalty)
 
+    print("Calculating Priority...")
     # Convert to priority queue with (-karma_points, timestamp)
     heap = [(-data["karma_points"], data["timestamp"], data) for data in user_requests.values()]
     heapq.heapify(heap)
