@@ -45,6 +45,7 @@ async def process_booking_queue(resource_id):
         data["id"] = request.id  # Store document ID
         print("Processing User: ", user_id)
         print("Processing User: ", data["id"])
+        print("Processing User: ", data["id"])
 
         # Track number of requests per user
         user_request_count[user_id] = user_request_count.get(user_id, 0) + 1
@@ -67,18 +68,19 @@ async def process_booking_queue(resource_id):
     heapq.heapify(heap)
     print("Processing Queue...")
     if heap:
+        print("I ATE SHIT")
         _, _, best_request = heapq.heappop(heap)
         print(best_request)
 
         # Approve the best request
         winner_id = best_request[user_id]
-        db.collection("bookings").document(best_request["user_id"]).update({"status": "approved"})
+        db.collection("bookings").document(best_request["id"]).update({"status": "approved"})
         print("User won! " , winner_id)
 
         # reject and delete all the loser requests stored
         for _, _, other_request in heap:
             loser_id = other_request[user_id]
-            db.collection("bookings").document([other_request["user_id"]]).delete()
+            db.collection("bookings").document([other_request["id"]]).delete()
 
     # clean up the queue
     del booking_queues[resource_id]
