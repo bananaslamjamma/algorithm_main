@@ -89,11 +89,11 @@ async def process_booking_queue(resource_id):
 
 async def update_space_data(resource_id, best_request):
     doc_ref = db.collection("spaces").document(resource_id)
-    doc = await doc_ref.get()
+    doc = doc_ref.get()
     
     if not doc.exists:
         # Create the document with a default structure
-        await doc_ref.set(resource_id)  # Creates an empty document
+         doc_ref.set(resource_id)  # Creates an empty document
         
     space_data = {
         # change this to be user booked
@@ -103,7 +103,7 @@ async def update_space_data(resource_id, best_request):
         "timeout": int(best_request["timeout"]),
     }
 
-    await doc_ref.update(space_data)  # Update fields
+    doc_ref.update(space_data)  # Update fields
     print(f"Updated space data for resource: {resource_id}")
 
 @app.post("/book")
