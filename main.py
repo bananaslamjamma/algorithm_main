@@ -9,6 +9,7 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 import logging
 from fastapi import HTTPException
+from google.cloud.firestore import FieldFilter
 
 # Initialize Firebase
 service_account_info = json.loads(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON"))
@@ -95,8 +96,8 @@ async def book_desk(data: dict, background_tasks: BackgroundTasks):
         # Check if the resource is already booked
         existing_booking = (
             db.collection("bookings")
-            .where("resource_id", "==", resource_id)
-            .where("status", "==", "approved")
+            .where(filter=FieldFilter("resource_id", "==", resource_id))
+            .where(filter=FieldFilter("status", "==", "approved"))
             .stream()
         )
 
