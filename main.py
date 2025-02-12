@@ -87,7 +87,7 @@ async def process_booking_queue(resource_id):
         "user_id": best_request["id"],
         "date_booked": firestore.SERVER_TIMESTAMP,
         "status": "authorized",
-        "timeout": int.parse(best_request["timeout"])
+        "timeout": int(best_request["timeout"])
         #"name": name
         }
     print("Wrote into spaces DB!")
