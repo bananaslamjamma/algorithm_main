@@ -51,7 +51,8 @@ async def process_booking_queue(resource_id):
         # Keep only the latest request per user
         if user_id not in user_requests or data["timestamp"] > user_requests[user_id]["timestamp"]:
             user_requests[user_id] = data
-
+            
+    print("Checking Multiple Users")
     # Apply spam penalty
     for user_id, count in user_request_count.items():
         if count > 1:
@@ -61,12 +62,14 @@ async def process_booking_queue(resource_id):
     # Convert to priority queue (Higher karma wins, if tie -> earliest timestamp wins)
     heap = [(-data["karma_points"], data["timestamp"], data) for data in user_requests.values()]
     heapq.heapify(heap)
-
+    print("Processing Queue...")
     if heap:
         _, _, best_request = heapq.heappop(heap)  # Highest priority request wins
 
         # Approve the best request
         db.collection("bookings").document(best_request["id"]).update({"status": "approved"})
+        print("User ID Won!")
+        print(best_request["id"])
 
         # Reject and delete all others
         for _, _, other_request in heap:
@@ -74,6 +77,7 @@ async def process_booking_queue(resource_id):
 
     # Cleanup
     del booking_queues[resource_id]
+    print("Finished, cleaning up...")
 
 
 
@@ -86,6 +90,16 @@ async def book_desk(data: dict, background_tasks: BackgroundTasks):
         karma_points = data.get("karma_points", 1000)
         if not user_id or not resource_id:
             raise HTTPException(status_code=400, detail="Missing user_id or resource_id")
+        # Check if the resource is already booked
+        existing_booking = (
+            db.collection("bookings")
+            .where("resource_id", "==", resource_id)
+            .where("status", "==", "approved")
+            .stream()
+        )
+
+        if any(existing_booking):  # If any approved booking exists
+            return {"message": "Booking failed. Resource already booked.", "status": "denied"}
         
         # Assign Firestore server timestamp
         data["timestamp"] = firestore.SERVER_TIMESTAMP
