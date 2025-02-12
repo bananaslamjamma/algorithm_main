@@ -1,3 +1,4 @@
+import asyncio
 import heapq
 import json
 import os
@@ -18,9 +19,14 @@ db = firestore.client()
 app = FastAPI()
 logging.basicConfig(level=logging.INFO)
 
-def process_competing_bookings(resource_id: str):
+async def process_competing_bookings(resource_id: str):
     sys.stdout.write("Listening for Requests... \n")
-    time.sleep(10)  # Wait 10 seconds for competing requests
+
+    # Wait 10 seconds while printing "Listening for requests..."
+    start_time = time.time()
+    while time.time() - start_time < 10:
+        print("Listening for Requests...")
+        await asyncio.sleep(1)  # Sleep for 1 second before printing again
 
     # Fetch all requests for this resource
     requests = list(db.collection("bookings").where("resource_id", "==", resource_id).stream())
@@ -83,7 +89,7 @@ async def book_desk(data: dict, background_tasks: BackgroundTasks):
             "resource_id": resource_id,
             "karma_points": karma_points,
             "timestamp": firestore.SERVER_TIMESTAMP,
-            "status": data.get("status", "pending"),
+            "status": "pending",
             "name": name
         }
         
