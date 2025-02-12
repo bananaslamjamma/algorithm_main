@@ -94,7 +94,7 @@ def update_space_data(resource_id, best_request):
     
     if not doc.exists:
         # Create the document with a default structure
-         doc_ref.set(resource_id)  # Creates an empty document
+         doc_ref.set({}, merge=True)
         
     space_data = {
         # change this to be user booked
