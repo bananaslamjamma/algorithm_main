@@ -88,6 +88,7 @@ async def process_booking_queue(resource_id):
     print("Finished, cleaning up...")
 
 def update_space_data(resource_id, best_request):
+    print("Function entered!")
     doc_ref = db.collection("spaces").document(resource_id)
     doc = doc_ref.get()
     
