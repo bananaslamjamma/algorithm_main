@@ -70,13 +70,14 @@ async def process_booking_queue(resource_id):
         print(best_request)
 
         # Approve the best request
-        db.collection("bookings").document(best_request[user_id]).update({"status": "approved"})
         winner_id = best_request[user_id]
+        db.collection("bookings").document(winner_id).update({"status": "approved"})
         print("User won! " , winner_id)
 
         # reject and delete all the loser requests stored
         for _, _, other_request in heap:
-            db.collection("bookings").document(other_request[user_id]).delete()
+            loser_id = other_request[user_id]
+            db.collection("bookings").document(loser_id).delete()
 
     # clean up the queue
     del booking_queues[resource_id]
