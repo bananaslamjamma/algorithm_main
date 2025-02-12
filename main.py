@@ -58,9 +58,16 @@ async def process_booking_queue(resource_id):
     # apply
     for user_id, count in user_request_count.items():
         if count > 1:
-            print("Multiple requests from same user found!")
-            penalty = (count - 1) * 50  # bonk 50 points per extra request
-            user_requests[user_id]["karma_points"] = max(0, user_requests[user_id]["karma_points"] - penalty)
+            print(f"Multiple requests from user {user_id} found! Applying penalty.")
+
+            # Ensure user exists in latest requests
+            if user_id in user_requests:
+                # Get existing karma points safely
+                current_karma = user_requests[user_id].get("karma_points", 0)
+
+                # Apply penalty: -50 points per extra request
+                penalty = (count - 1) * 50  
+                user_requests[user_id]["karma_points"] = max(0, current_karma - penalty)
 
     # convert to priority queue higher karma wins 
     # if tie earliest timestamp wins
