@@ -47,22 +47,27 @@ async def process_booking_queue(resource_id):
         print("Processing User: ", request.id)
         print("Processing User: ", data["id"])
 
-        # Track number of requests per user
-        user_request_count[user_id] = user_request_count.get(user_id, 0) + 1
 
-        # Keep only the latest request per user
+    print(f"Processing request from user {user_id} with timestamp {data['timestamp']}")
+    # count
+    if user_id in user_request_count:
+        user_request_count[user_id] += 1
+    else:
+        user_request_count[user_id] = 1
+    # keep latest
         if user_id not in user_requests or data["timestamp"] > user_requests[user_id]["timestamp"]:
             user_requests[user_id] = data
             
+    print("User request counts:", user_request_count)        
     print("Checking Multiple Users")
     # apply
     for user_id, count in user_request_count.items():
         if count > 1:
             print(f"Multiple requests from user {user_id} found! Applying penalty.")
 
-            # Ensure user exists in latest requests
+            # Eesure user exists in latest requests
             if user_id in user_requests:
-                # Get existing karma points safely
+                # get existing karma points safely
                 current_karma = user_requests[user_id].get("karma_points", 0)
 
                 # Apply penalty: -50 points per extra request
