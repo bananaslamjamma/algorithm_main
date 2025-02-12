@@ -79,6 +79,7 @@ async def process_booking_queue(resource_id):
         # reject and delete all the loser requests stored
         for _, _, other_request in heap:
             print("I ATE SHIT 3333")
+            print("User won! " , other_request["id"])
             db.collection("bookings").document([other_request["id"]]).delete()
     print("I ATE SHIT 444")
     
