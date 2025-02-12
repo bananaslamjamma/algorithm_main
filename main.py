@@ -31,12 +31,6 @@ async def process_competing_bookings(resource_id: str):
     # Fetch all requests for this resource
     requests = list(db.collection("bookings").where("resource_id", "==", resource_id).stream())
 
-    if len(requests) == 1:
-        # If only one request exists, approve immediately
-        request_data = requests[0].to_dict()
-        db.collection("bookings").document(request_data["user_id"]).update({"status": "approved"})
-        return
-
     # Multiple users competing: Apply priority system
     user_requests = {}
     user_request_count = {}
@@ -96,12 +90,7 @@ async def book_desk(data: dict, background_tasks: BackgroundTasks):
         doc_ref = db.collection("bookings").document(user_id)
         doc_ref.set(booking_data)  # Using set() to overwrite any existing document with the same ID
          # Check if this is the only request for the resource
-        existing_requests = list(db.collection("bookings").where("resource_id", "==", resource_id).stream())
-        
-        if len(existing_requests) == 1:
-            # If this is the first and only request, approve instantly
-            db.collection("bookings").document(user_id).update({"status": "approved"})
-            return {"message": "Booking approved"}
+        #existing_requests = list(db.collection("bookings").where("resource_id", "==", resource_id).stream())
         
         # Else, we have stuff in queue to process
         background_tasks.add_task(process_competing_bookings, resource_id)
