@@ -79,27 +79,32 @@ async def process_booking_queue(resource_id):
         for _, _, other_request in heap:
             print("User lost! " , other_request["id"])
             db.collection("bookings").document(other_request["id"]).delete()
-
-
-    #put it in a diff function
-    space_data = {
-        # change this to be user booked
-        "user_id": best_request["id"],
-        "date_booked": firestore.SERVER_TIMESTAMP,
-        "status": "authorized",
-        "timeout": int(best_request["timeout"])
-        #"name": name
-        }
-    print("Wrote into spaces DB!")
-    # TODO just create the doc id, incase its not there for some reason
-    doc_ref = db.collection("spaces").document(resource_id)
-    doc_ref.update(space_data)  # Using set() to overwrite any existing document with the same ID
+            
+    # update the DB so that HA devices can scan the change        
+    await update_space_data(resource_id, best_request)
     
     # clean up the queue
     del booking_queues[resource_id]
     print("Finished, cleaning up...")
 
+async def update_space_data(resource_id, best_request):
+    doc_ref = db.collection("spaces").document(resource_id)
+    doc = await doc_ref.get()
+    
+    if not doc.exists:
+        # Create the document with a default structure
+        await doc_ref.set({"resource_id": resource_id})  # Creates an empty document
+        
+    space_data = {
+        # change this to be user booked
+        "user_id": best_request["id"],
+        "date_booked": firestore.SERVER_TIMESTAMP,
+        "status": "authorized",
+        "timeout": int(best_request["timeout"]),
+    }
 
+    await doc_ref.update(space_data)  # Update fields
+    print(f"Updated space data for resource: {resource_id}")
 
 @app.post("/book")
 async def book_desk(data: dict, background_tasks: BackgroundTasks):
@@ -131,17 +136,7 @@ async def book_desk(data: dict, background_tasks: BackgroundTasks):
             "timeout": timeout
             #"name": name
         }
-        
-        space_data = {
-            "user_id": user_id,
-            "resource_id": resource_id,
-            "karma_points": karma_points,
-            "timestamp": firestore.SERVER_TIMESTAMP,
-            "status": "pending",
-            "timeout": timeout
-            #"name": name
-        }
-
+    
         if any(existing_booking):
             print("Resource already booked!")
             return {"message": "Booking failed. Resource already booked.", "status": "denied"}
@@ -160,39 +155,6 @@ async def book_desk(data: dict, background_tasks: BackgroundTasks):
             
 
         return {"message": "Booking request received"}
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-## OLD
-def defunct(data: dict, background_tasks: BackgroundTasks):
-    try:
-        user_id = data.get("user_id")
-        resource_id = data.get("resource_id")
-        name = data.get("name")
-        karma_points = data.get("karma_points", 1000)
-        if not user_id or not resource_id:
-            raise HTTPException(status_code=400, detail="Missing user_id or resource_id")
-        
-        # Add data to Firestore
-        booking_data = {
-            "user_id": user_id,
-            "resource_id": resource_id,
-            "karma_points": karma_points,
-            "timestamp": firestore.SERVER_TIMESTAMP,
-            "status": "pending",
-            "name": name
-        }
-        
-
-        doc_ref = db.collection("bookings").document(user_id)
-        doc_ref.set(booking_data)  
-
-    
-        # Else, we have stuff in queue to process
-        #background_tasks.add_task(process_competing_bookings, resource_id)
-        return {"message": "Booking request received, waiting for priority resolution"}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
