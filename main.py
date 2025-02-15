@@ -86,7 +86,7 @@ async def process_booking_queue(resource_id):
     heapq.heapify(heap)
     print("Processing Queue...")
     while copy_heap:
-        item = heapq.heappop(heap)
+        item = heapq.heappop(copy_heap)
         karma_points = -item["karma_points"]  # Convert back to positive karma points
         timestamp = item["timestamp"]
         print(f"Karma Points: {karma_points}, Timestamp: {timestamp} ")
