@@ -60,7 +60,8 @@ async def process_booking_queue(resource_id):
         if user_id not in user_requests or data["timestamp"] > user_requests[user_id]["timestamp"]:
             user_requests[user_id] = data
             
-    print("User request counts:", user_request_count)        
+    print("User request counts:", user_request_count)
+    print("User items counts:", user_request_count.items())           
     print("Checking Multiple Users")
     # apply
     for user_id, count in user_request_count.items():
@@ -78,7 +79,9 @@ async def process_booking_queue(resource_id):
 
     # convert to priority queue higher karma wins 
     # if tie earliest timestamp wins
+    
     heap = [(-data["karma_points"], data["timestamp"], data) for data in user_requests.values()]
+    print("Print the Heap: ", heap)
     heapq.heapify(heap)
     print("Processing Queue...")
     if heap:
