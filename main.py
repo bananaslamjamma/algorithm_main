@@ -91,8 +91,8 @@ async def process_booking_queue(resource_id):
     doc_ref = db.collection("bookings").document(best_request["id"])
     updated_doc = doc_ref.get()
     print("dis true?")
-    print(best_request["timeout"] > 0 and updated_doc.exists)
-    if best_request["timeout"] > 0 and updated_doc.exists:
+    print(best_request["timeout"] > 0)
+    if best_request["timeout"] > 0:
         asyncio.create_task(delete_after_timeout(doc_ref,best_request["timeout"]))
 
     # clean up the queue
