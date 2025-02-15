@@ -22,9 +22,9 @@ logging.basicConfig(level=logging.INFO)
 
 PENDING_TIME = 10  # Time window to collect requests (seconds)
 booking_queues = {}  # Dictionary to track queues per resource
-user_requests = []
+user_requests = {}
 
-async def process_booking_queue(resource_id, user_requests):
+async def process_booking_queue(resource_id):
     # Process all the queued requests
     await asyncio.sleep(PENDING_TIME)
     
@@ -35,6 +35,9 @@ async def process_booking_queue(resource_id, user_requests):
     if not requests:
         return  # No requests to process
 
+    user_requests = {}
+    user_request_count = {}
+
     # Process requests
     print("Processing Requests Stored...")
     for request in requests:
@@ -44,23 +47,23 @@ async def process_booking_queue(resource_id, user_requests):
         print("Processing User: ", user_id)
         print("Processing User Request: ", request.id)
     
-    print("Current User Requests: ", user_requests)
+    print("Current Booking Count: ", booking_queues)
 
 
     print(f"Processing request from user {user_id} with timestamp {data['timestamp']}")
     # count
-    if user_id in user_requests:
-        user_requests[user_id] += 1
+    if user_id in user_request_count:
+        user_request_count[user_id] += 1
     else:
-        user_requests[user_id] = 1
+        user_request_count[user_id] = 1
     # keep latest
         if user_id not in user_requests or data["timestamp"] > user_requests[user_id]["timestamp"]:
             user_requests[user_id] = data
             
-    print("User request counts:", user_requests)        
+    print("User request counts:", user_request_count)        
     print("Checking Multiple Users")
     # apply
-    for user_id, count in user_requests.items():
+    for user_id, count in user_request_count.items():
         if count > 1:
             print(f"Multiple requests from user {user_id} found! Applying penalty.")
 
@@ -96,7 +99,6 @@ async def process_booking_queue(resource_id, user_requests):
     
     # clean up the queue
     del booking_queues[resource_id]
-    del user_requests
     print("Finished, cleaning up...")
 
 def update_space_data(resource_id, best_request):
@@ -164,8 +166,7 @@ async def book_desk(data: dict, background_tasks: BackgroundTasks):
 
         # start a background task to process bookings after 10 seconds
         if resource_id not in booking_queues:
-            user_requests.append(booking_data)
-            booking_queues[resource_id] = asyncio.create_task(process_booking_queue(resource_id, user_requests))
+            booking_queues[resource_id] = asyncio.create_task(process_booking_queue(resource_id))
             
 
         return {"message": "Booking request received"}
