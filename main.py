@@ -15,6 +15,7 @@ from google.cloud.firestore import FieldFilter
 service_account_info = json.loads(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON"))
 cred = credentials.Certificate(service_account_info)
 firebase_admin.initialize_app(cred)
+#change to async later?
 db = firestore.client()
 
 app = FastAPI()
@@ -85,6 +86,13 @@ async def process_booking_queue(resource_id):
     update_space_data(resource_id, best_request)
     delete_temp()
     
+    # delete the booking after the time is over
+    # needs another case if cancelled manually.
+    doc_ref = db.collection("bookings").document(best_request["id"])
+    updated_doc = doc_ref.get()
+    if best_request["timeout"] > 0 and updated_doc.exists:
+        asyncio.create_task(delete_after_timeout(doc_ref,best_request["timeout"]))
+
     # clean up the queue
     del booking_queues[resource_id]
     print("Finished, cleaning up...")
@@ -163,7 +171,12 @@ async def book_desk(data: dict, background_tasks: BackgroundTasks):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
-    
+
+async def delete_after_timeout(doc_ref, timeout):
+    await asyncio.sleep(timeout)
+    await doc_ref.delete()
+    print(f"Deleted document: {doc_ref.id} after {timeout} seconds")
+
 async def sleep_with_progress():
     for i in range(PENDING_TIME):
         print(f"Sleeping... {i + 1} second(s) passed")
