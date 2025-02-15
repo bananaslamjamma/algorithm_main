@@ -147,8 +147,13 @@ async def book_desk(data: dict, background_tasks: BackgroundTasks):
 
         # start a background task to process bookings after 10 seconds
         if resource_id not in booking_queues:
-            booking_queues[resource_id] = asyncio.create_task(process_booking_queue(resource_id))
-
+            coroutine = await process_booking_queue(resource_id)
+            booking_queues[resource_id] = asyncio.wait_for(coroutine, timeout=60)
+            try:
+                result = await booking_queues[resource_id]
+                print("Task Completed: " , result)
+            except asyncio.TimeoutError:
+                print("Task timed out")
             
 
         return {"message": "Booking request received"}
