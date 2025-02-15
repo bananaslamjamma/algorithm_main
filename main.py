@@ -62,10 +62,6 @@ async def process_booking_queue(resource_id):
     copy_heap =  heap
     print("Print the Heap: ", heap)
     heapq.heapify(heap)
-    heapq.heapify(copy_heap)
-    while copy_heap:
-        item = heapq.heappop(copy_heap)
-        print(f"Item" , item)
         
     print("Processing Queue...")
     if heap:
