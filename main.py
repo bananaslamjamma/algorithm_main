@@ -176,7 +176,7 @@ async def book_desk(data: dict, background_tasks: BackgroundTasks):
 
 async def delete_after_timeout(doc_ref, timeout):
     await asyncio.sleep(timeout)
-    doc_ref.delete()
+    await doc_ref.delete()
     print(f"Deleted document: {doc_ref.id} after {timeout} seconds")
 
 async def sleep_with_progress():
