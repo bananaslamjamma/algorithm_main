@@ -147,13 +147,8 @@ async def book_desk(data: dict, background_tasks: BackgroundTasks):
 
         # start a background task to process bookings after 10 seconds
         if resource_id not in booking_queues:
-            try:
-                coroutine = process_booking_queue(resource_id)
-                booking_queues[resource_id] = asyncio.wait_for(coroutine, timeout=60)
-                #result = await asyncio.wait_for(booking_queues, timeout=60)
-                print("Task Completed: ")
-            except asyncio.TimeoutError:
-                print("Task timed out")
+            booking_queues[resource_id] = asyncio.create_task(process_booking_queue(resource_id))
+
             
 
         return {"message": "Booking request received"}
@@ -163,6 +158,8 @@ async def book_desk(data: dict, background_tasks: BackgroundTasks):
 
 def dupe_requests():
     user_request_count = {}
+    # removet his
+    data = 1
         # count
     if user_id in user_request_count:
         user_request_count[user_id] += 1
