@@ -46,7 +46,7 @@ async def process_booking_queue(resource_id):
         print("Processing User: ", user_id)
         print("Processing User Request: ", request.id)
     
-    print("Current User Count: ", user_request_count)
+    print("Current Booking Count: ", booking_queues)
 
 
     print(f"Processing request from user {user_id} with timestamp {data['timestamp']}")
