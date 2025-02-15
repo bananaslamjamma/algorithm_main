@@ -78,20 +78,22 @@ async def process_booking_queue(resource_id):
 
     # convert to priority queue higher karma wins 
     # if tie earliest timestamp wins
+    print("i hate this")
+    print(user_requests.values())
     heap = [(-data["karma_points"], data["timestamp"], data) for data in user_requests.values()]
     heapq.heapify(heap)
     print("Processing Queue...")
     print(heap)
     if heap:
-        print("Winner Processing")
+        
         _, _, best_request = heapq.heappop(heap)
         print(best_request)
         # Approve the best request
         db.collection("bookings").document(best_request["id"]).update({"status": "approved"})
         print("User won! " , best_request["id"])
 
-        # reject and delete all the loser requests stored
-        while heap:
+    # reject and delete all the loser requests stored
+    while heap:
             _, _, other_request = heapq.heappop(heap)
             print("User lost! " , other_request["id"])
             db.collection("bookings").document(other_request["id"]).delete()
