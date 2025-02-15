@@ -51,7 +51,14 @@ async def process_booking_queue(resource_id):
         print("Processing User Request: ", request.id)
         
     print("User Requests: ", user_requests)
-
+    
+    print("Checking Multiple Users")
+    # apply
+    for user_id, count in user_request_count.items():
+        if count > 1:
+            print("Multiple requests from same user found!")
+            penalty = (count - 1) * 50  # bonk 50 points per extra request
+            user_requests[user_id]["karma_points"] = max(0, user_requests[user_id]["karma_points"] - penalty)
 
     # convert to priority queue higher karma wins 
     # if tie earliest timestamp wins
@@ -76,6 +83,7 @@ async def process_booking_queue(resource_id):
             
     # update the DB so that HA devices can scan the change        
     update_space_data(resource_id, best_request)
+    delete_temp()
     
     # clean up the queue
     del booking_queues[resource_id]
@@ -161,3 +169,11 @@ async def sleep_with_progress():
         print(f"Sleeping... {i + 1} second(s) passed")
         await asyncio.sleep(1)
     print("Done sleeping")
+
+def delete_temp():
+    collection_ref = db.collection("temp")
+    docs = collection_ref.stream()
+    
+    for doc in docs:
+        print(f'Deleting doc {doc.id} => {doc.to_dict()}')
+        doc.reference.delete()
