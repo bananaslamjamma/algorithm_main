@@ -20,12 +20,12 @@ db = firestore.client()
 app = FastAPI()
 logging.basicConfig(level=logging.INFO)
 
-PENDING_TIME = 30  # Time window to collect requests (seconds)
+PENDING_TIME = 10  # Time window to collect requests (seconds)
 booking_queues = {}  # Dictionary to track queues per resource
 
 async def process_booking_queue(resource_id):
     # Process all the queued requests
-    await asyncio.sleep(PENDING_TIME)
+    await sleep_with_progress()
     
     print("Fetching Requests Stored...")
     # Fetch all requests for this resource
@@ -44,23 +44,36 @@ async def process_booking_queue(resource_id):
         user_id = data["user_id"]
         data["id"] = request.id  # Store document ID
         print("Processing User: ", user_id)
-        print("Processing User: ", request.id)
-        print("Processing User: ", data["id"])
+        print("Processing User Request: ", request.id)
+    
+    print("Current User Count: ", user_request_count)
 
-        # Track number of requests per user
-        user_request_count[user_id] = user_request_count.get(user_id, 0) + 1
 
-        # Keep only the latest request per user
+    print(f"Processing request from user {user_id} with timestamp {data['timestamp']}")
+    # count
+    if user_id in user_request_count:
+        user_request_count[user_id] += 1
+    else:
+        user_request_count[user_id] = 1
+    # keep latest
         if user_id not in user_requests or data["timestamp"] > user_requests[user_id]["timestamp"]:
             user_requests[user_id] = data
             
+    print("User request counts:", user_request_count)        
     print("Checking Multiple Users")
     # apply
     for user_id, count in user_request_count.items():
         if count > 1:
-            print("Multiple requests from same user found!")
-            penalty = (count - 1) * 50  # bonk 50 points per extra request
-            user_requests[user_id]["karma_points"] = max(0, user_requests[user_id]["karma_points"] - penalty)
+            print(f"Multiple requests from user {user_id} found! Applying penalty.")
+
+            # Eesure user exists in latest requests
+            if user_id in user_requests:
+                # get existing karma points safely
+                current_karma = user_requests[user_id].get("karma_points", 0)
+
+                # Apply penalty: -50 points per extra request
+                penalty = (count - 1) * 50  
+                user_requests[user_id]["karma_points"] = max(0, current_karma - penalty)
 
     # convert to priority queue higher karma wins 
     # if tie earliest timestamp wins
@@ -79,27 +92,33 @@ async def process_booking_queue(resource_id):
         for _, _, other_request in heap:
             print("User lost! " , other_request["id"])
             db.collection("bookings").document(other_request["id"]).delete()
-
-
-    #put it in a diff function
-    space_data = {
-        # change this to be user booked
-        "user_id": best_request["id"],
-        "date_booked": firestore.SERVER_TIMESTAMP,
-        "status": "authorized",
-        "timeout": int(best_request["timeout"])
-        #"name": name
-        }
-    print("Wrote into spaces DB!")
-    # TODO just create the doc id, incase its not there for some reason
-    doc_ref = db.collection("spaces").document(resource_id)
-    doc_ref.update(space_data)  # Using set() to overwrite any existing document with the same ID
+            
+    # update the DB so that HA devices can scan the change        
+    update_space_data(resource_id, best_request)
     
     # clean up the queue
     del booking_queues[resource_id]
     print("Finished, cleaning up...")
 
+def update_space_data(resource_id, best_request):
+    print("Function entered!")
+    doc_ref = db.collection("spaces").document(resource_id)
+    doc = doc_ref.get()
+    
+    if not doc.exists:
+        # Create the document with a default structure
+         doc_ref.set({}, merge=True)
+        
+    space_data = {
+        # change this to be user booked
+        "user_id": best_request["id"],
+        "date_booked": firestore.SERVER_TIMESTAMP,
+        "status": "authorized",
+        "timeout": int(best_request["timeout"]),
+    }
 
+    doc_ref.update(space_data)  # Update fields
+    print(f"Updated space data for resource: {resource_id}")
 
 @app.post("/book")
 async def book_desk(data: dict, background_tasks: BackgroundTasks):
@@ -131,17 +150,7 @@ async def book_desk(data: dict, background_tasks: BackgroundTasks):
             "timeout": timeout
             #"name": name
         }
-        
-        space_data = {
-            "user_id": user_id,
-            "resource_id": resource_id,
-            "karma_points": karma_points,
-            "timestamp": firestore.SERVER_TIMESTAMP,
-            "status": "pending",
-            "timeout": timeout
-            #"name": name
-        }
-
+    
         if any(existing_booking):
             print("Resource already booked!")
             return {"message": "Booking failed. Resource already booked.", "status": "denied"}
@@ -163,36 +172,10 @@ async def book_desk(data: dict, background_tasks: BackgroundTasks):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-
-## OLD
-def defunct(data: dict, background_tasks: BackgroundTasks):
-    try:
-        user_id = data.get("user_id")
-        resource_id = data.get("resource_id")
-        name = data.get("name")
-        karma_points = data.get("karma_points", 1000)
-        if not user_id or not resource_id:
-            raise HTTPException(status_code=400, detail="Missing user_id or resource_id")
-        
-        # Add data to Firestore
-        booking_data = {
-            "user_id": user_id,
-            "resource_id": resource_id,
-            "karma_points": karma_points,
-            "timestamp": firestore.SERVER_TIMESTAMP,
-            "status": "pending",
-            "name": name
-        }
-        
-
-        doc_ref = db.collection("bookings").document(user_id)
-        doc_ref.set(booking_data)  
-
     
-        # Else, we have stuff in queue to process
-        #background_tasks.add_task(process_competing_bookings, resource_id)
-        return {"message": "Booking request received, waiting for priority resolution"}
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    
+async def sleep_with_progress():
+    for i in range(PENDING_TIME):
+        print(f"Sleeping... {i + 1} second(s) passed")
+        await asyncio.sleep(1)
+    print("Done sleeping")

@@ -17,3 +17,9 @@ while heap:
     timestamp = item[1]
     data = item[2]
     print(f"Karma Points: {karma_points}, Timestamp: {timestamp}, Data: {data}")
+    
+async def sleep_with_progress():
+    for i in range(PENDING_TIME):
+        print(f"Sleeping... {i + 1} second(s) passed")
+        await asyncio.sleep(1)
+    print("Done sleeping")
