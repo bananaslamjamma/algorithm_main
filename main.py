@@ -91,9 +91,13 @@ async def process_booking_queue(resource_id):
     doc_ref = db.collection("bookings").document(best_request["id"])
     updated_doc = doc_ref.get()
     print("dis true?")
-    print(best_request["timeout"])
-    if best_request["timeout"] > 0:
-        asyncio.create_task(delete_after_timeout(doc_ref,best_request["timeout"]))
+
+    try:
+        timeout = int(best_request["timeout"])  # Convert to int
+        if timeout > 0:
+            print("Timeout is valid:", timeout)
+    except (ValueError, TypeError):
+        print("Invalid timeout value:", best_request["timeout"])
 
     # clean up the queue
     del booking_queues[resource_id]
@@ -176,7 +180,7 @@ async def book_desk(data: dict, background_tasks: BackgroundTasks):
 
 async def delete_after_timeout(doc_ref, timeout):
     await asyncio.sleep(timeout)
-    await doc_ref.delete()
+    doc_ref.delete()
     print(f"Deleted document: {doc_ref.id} after {timeout} seconds")
 
 async def sleep_with_progress():
