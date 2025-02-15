@@ -31,7 +31,7 @@ async def process_booking_queue(resource_id):
     print("Fetching Requests Stored...")
     # Fetch all requests for this resource
     requests = list(db.collection("bookings").where("resource_id", "==", resource_id).stream())
-    all_requests = list(db.collection('temp'))
+    all_requests = list(db.collection('temp').stream())
     print(all_requests)
 
     if not requests:
