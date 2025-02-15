@@ -20,7 +20,7 @@ db = firestore.client()
 app = FastAPI()
 logging.basicConfig(level=logging.INFO)
 
-PENDING_TIME = 10  # Time window to collect requests (seconds)
+PENDING_TIME = 20  # Time window to collect requests (seconds)
 booking_queues = {}  # Dictionary to track queues per resource
 
 async def process_booking_queue(resource_id):
@@ -30,6 +30,8 @@ async def process_booking_queue(resource_id):
     print("Fetching Requests Stored...")
     # Fetch all requests for this resource
     requests = list(db.collection("bookings").where("resource_id", "==", resource_id).stream())
+    all_requests = list(db.collection('temp'))
+    print(all_requests)
 
     if not requests:
         return  # No requests to process
@@ -48,7 +50,9 @@ async def process_booking_queue(resource_id):
     
     print("Current User Count: ", user_request_count)
 
-
+    # Track number of requests per user
+    user_request_count[user_id] = user_request_count.get(user_id, 0) + 1
+    
     print(f"Processing request from user {user_id} with timestamp {data['timestamp']}")
     # count
     if user_id in user_request_count:
@@ -165,6 +169,7 @@ async def book_desk(data: dict, background_tasks: BackgroundTasks):
 
         # start a background task to process bookings after 10 seconds
         if resource_id not in booking_queues:
+            db.collection('temp').add(booking_data)
             booking_queues[resource_id] = asyncio.create_task(process_booking_queue(resource_id))
             
 
