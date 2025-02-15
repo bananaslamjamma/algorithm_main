@@ -44,8 +44,9 @@ async def process_booking_queue(resource_id):
         user_id = data["user_id"]
         data["id"] = request.id  # Store document ID
         print("Processing User: ", user_id)
-        print("Processing User: ", request.id)
-        print("Processing User: ", data["id"])
+        print("Processing User Request: ", request.id)
+    
+    print("Current User Count: ", user_request_count)
 
 
     print(f"Processing request from user {user_id} with timestamp {data['timestamp']}")
