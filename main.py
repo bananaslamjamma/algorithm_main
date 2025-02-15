@@ -79,11 +79,18 @@ async def process_booking_queue(resource_id):
 
     # convert to priority queue higher karma wins 
     # if tie earliest timestamp wins
-    
     heap = [(-data["karma_points"], data["timestamp"], data) for data in user_requests.values()]
+    copy_heap = heap
+    heapq.heapify(copy_heap)
     print("Print the Heap: ", heap)
     heapq.heapify(heap)
     print("Processing Queue...")
+    while heap:
+        item = heapq.heappop(heap)
+        karma_points = -item["karma_points"]  # Convert back to positive karma points
+        timestamp = item["timestamp"]
+        print(f"Karma Points: {karma_points}, Timestamp: {timestamp} ")
+    
     if heap:
         print("Winner Processing")
         _, _, best_request = heapq.heappop(heap)
