@@ -19,8 +19,9 @@ db = firestore.client()
 
 app = FastAPI()
 logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("uvicorn.error")
 
-PENDING_TIME = 20  # Time window to collect requests (seconds)
+PENDING_TIME = 15  # Time window to collect requests (seconds)
 booking_queues = {}  # Dictionary to track queues per resource
 
 async def process_booking_queue(resource_id):
@@ -164,12 +165,12 @@ async def book_desk(data: dict, background_tasks: BackgroundTasks):
 
         # store request in Firestore temporarily
         # db.collection("bookings").add(data)
+        db.collection('temp').add(data)
         doc_ref = db.collection("bookings").document(user_id)
         doc_ref.set(booking_data)  # Using set() to overwrite any existing document with the same ID
 
         # start a background task to process bookings after 10 seconds
         if resource_id not in booking_queues:
-            db.collection('temp').add(booking_data)
             booking_queues[resource_id] = asyncio.create_task(process_booking_queue(resource_id))
             
 
