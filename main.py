@@ -85,6 +85,7 @@ async def process_booking_queue(resource_id):
     heap = [(-data["karma_points"], data["timestamp"], data) for data in user_requests.values()]
     heapq.heapify(heap)
     print("Processing Queue...")
+    print(heap)
     if heap:
         print("Winner Processing")
         _, _, best_request = heapq.heappop(heap)
