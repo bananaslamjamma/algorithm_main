@@ -96,7 +96,7 @@ async def process_booking_queue(resource_id):
         timeout = int(best_request["timeout"])  # Convert to int
         if timeout > 0:
             print("Timeout is valid:", timeout)
-            delete_after_timeout(doc_ref, timeout)
+            asyncio.create_task(delete_after_timeout(doc_ref, timeout))
     except (ValueError, TypeError):
         print("Invalid timeout value:", best_request["timeout"])
 
