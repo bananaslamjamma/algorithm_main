@@ -52,6 +52,7 @@ async def process_booking_queue(resource_id):
 
     print(f"Processing request from user {user_id} with timestamp {data['timestamp']}")
     
+    user_requests[user_id] = data
     if not user_requests:
         print("user_requests  is empty")
 
@@ -61,7 +62,6 @@ async def process_booking_queue(resource_id):
     print("Print the Heap: ", heap)
     heapq.heapify(heap)
     print("Processing Queue...")
-    
     if heap:
         print("Winner Processing")
         _, _, best_request = heapq.heappop(heap)
