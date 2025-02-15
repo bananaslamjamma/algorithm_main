@@ -51,43 +51,16 @@ async def process_booking_queue(resource_id):
 
 
     print(f"Processing request from user {user_id} with timestamp {data['timestamp']}")
-    # count
-    if user_id in user_request_count:
-        user_request_count[user_id] += 1
-    else:
-        user_request_count[user_id] = 1
-    # keep latest
-        if user_id not in user_requests or data["timestamp"] > user_requests[user_id]["timestamp"]:
-            user_requests[user_id] = data
-            
-    print("User request counts:", user_request_count)
-    print("User items counts:", user_request_count.items())           
-    print("Checking Multiple Users")
-    # apply
-    for user_id, count in user_request_count.items():
-        if count > 1:
-            print(f"Multiple requests from user {user_id} found! Applying penalty.")
-
-            # Eesure user exists in latest requests
-            if user_id in user_requests:
-                # get existing karma points safely
-                current_karma = user_requests[user_id].get("karma_points", 0)
-
-                # Apply penalty: -50 points per extra request
-                penalty = (count - 1) * 50  
-                user_requests[user_id]["karma_points"] = max(0, current_karma - penalty)
+    
+    if not user_requests:
+        print("user_requests  is empty")
 
     # convert to priority queue higher karma wins 
     # if tie earliest timestamp wins
     heap = [(-data["karma_points"], data["timestamp"], data) for data in user_requests.values()]
-    copy_heap = heap
-    heapq.heapify(copy_heap)
     print("Print the Heap: ", heap)
     heapq.heapify(heap)
     print("Processing Queue...")
-    while copy_heap:
-        item = heapq.heappop(copy_heap)
-        print(item)
     
     if heap:
         print("Winner Processing")
@@ -181,3 +154,31 @@ async def book_desk(data: dict, background_tasks: BackgroundTasks):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+def dupe_requests():
+    user_request_count = {}
+        # count
+    if user_id in user_request_count:
+        user_request_count[user_id] += 1
+    else:
+        user_request_count[user_id] = 1
+    # keep latest
+        if user_id not in user_requests or data["timestamp"] > user_requests[user_id]["timestamp"]:
+            user_requests[user_id] = data
+            
+    print("User request counts:", user_request_count)
+    print("User items counts:", user_request_count.items())           
+    print("Checking Multiple Users")
+    # apply
+    for user_id, count in user_request_count.items():
+        if count > 1:
+            print(f"Multiple requests from user {user_id} found! Applying penalty.")
+
+            # Ensure user exists in latest requests
+            if user_id in user_requests:
+                # get existing karma points safely
+                current_karma = user_requests[user_id].get("karma_points", 0)
+
+                # Apply penalty: -50 points per extra request
+                penalty = (count - 1) * 50  
+                user_requests[user_id]["karma_points"] = max(0, current_karma - penalty)
