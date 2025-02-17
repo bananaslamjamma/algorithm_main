@@ -63,7 +63,7 @@ async def process_booking_queue(resource_id):
 
     # convert to priority queue higher karma wins 
     # if tie earliest timestamp wins
-    print("i hate this: Raw")
+    print("Raw: ")
     print(requests)
     heap = [(-data["karma_points"], data["timestamp"], data) for data in user_requests]
     heapq.heapify(heap)
@@ -90,13 +90,13 @@ async def process_booking_queue(resource_id):
     # needs another case if cancelled manually.
     doc_ref = db.collection("bookings").document(best_request["id"])
     updated_doc = doc_ref.get()
-    print("dis true?")
 
+    # move this or remove it
     try:
         timeout = int(best_request["timeout"])  # Convert to int
         if timeout > 0:
             print("Timeout is valid:", timeout)
-            asyncio.create_task(delete_after_timeout(doc_ref, timeout))
+            #asyncio.create_task(delete_after_timeout(doc_ref, timeout))
     except (ValueError, TypeError):
         print("Invalid timeout value:", best_request["timeout"])
 
@@ -117,7 +117,8 @@ def update_space_data(resource_id, best_request):
         # change this to be user booked
         "user_id": best_request["id"],
         "date_booked": firestore.SERVER_TIMESTAMP,
-        "status": "authorized",
+        "status": "unauthorized",
+        "is_booked": "true",
         "timeout": int(best_request["timeout"]),
     }
 
