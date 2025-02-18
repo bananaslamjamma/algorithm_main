@@ -2,6 +2,7 @@ import asyncio
 import heapq
 import json
 import os
+import random
 import sys
 import time
 from fastapi import BackgroundTasks, FastAPI
@@ -25,7 +26,7 @@ logger = logging.getLogger("uvicorn.error")
 PENDING_TIME = 15  # Time window to collect requests (seconds)
 booking_queues = {}  # Dictionary to track queues per resource
 
-async def process_booking_queue(resource_id):
+async def process_booking_queue(resource_id, booking_id):
     # Process all the queued requests
     await sleep_with_progress()
     
@@ -96,7 +97,7 @@ async def process_booking_queue(resource_id):
         timeout = int(best_request["timeout"])  # Convert to int
         if timeout > 0:
             print("Timeout is valid:", timeout)
-            #asyncio.create_task(delete_after_timeout(doc_ref, timeout))
+            asyncio.create_task(delete_after_timeout(doc_ref, timeout))
     except (ValueError, TypeError):
         print("Invalid timeout value:", best_request["timeout"])
 
@@ -130,7 +131,6 @@ async def book_desk(data: dict, background_tasks: BackgroundTasks):
     try:
         user_id = data.get("user_id")
         resource_id = data.get("resource_id")
-        #name = data.get("name")
         karma_points = data.get("karma_points", 1000)
         timeout = data.get("timeout")
         
@@ -139,10 +139,13 @@ async def book_desk(data: dict, background_tasks: BackgroundTasks):
         
         print("Booking Request Received!")
         # check if the resource is already booked
+        # don't have time to currently check if dates match
         existing_booking = (
             db.collection("bookings")
             .where(filter=FieldFilter("resource_id", "==", resource_id))
             .where(filter=FieldFilter("status", "==", "approved"))
+            #.where("start_time", ">=", "2025-02-17T00:00") 
+            #.where("end_time", "<=", "2025-02-17T23:59") 
             .stream()
         )
         
@@ -166,12 +169,13 @@ async def book_desk(data: dict, background_tasks: BackgroundTasks):
         # store request in Firestore temporarily
         # db.collection("bookings").add(data)
         db.collection('temp').add(data)
-        doc_ref = db.collection("bookings").document(user_id)
+        doc_ref = db.collection("bookings").document()
+        booking_id = doc_ref.id
         doc_ref.set(booking_data)  # Using set() to overwrite any existing document with the same ID
 
         # start a background task to process bookings after 10 seconds
         if resource_id not in booking_queues:
-            booking_queues[resource_id] = asyncio.create_task(process_booking_queue(resource_id))
+            booking_queues[resource_id] = asyncio.create_task(process_booking_queue(resource_id, booking_id))
             
 
         return {"message": "Booking request received"}
