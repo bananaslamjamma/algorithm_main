@@ -106,7 +106,7 @@ async def process_booking_queue(resource_id):
 
 def update_space_data(resource_id, best_request):
     print("Function entered!")
-    doc_ref = db.collection("spaces").document(resource_id)
+    doc_ref = db.collection("spaces").document("hotdesks").collection(resource_id)
     doc = doc_ref.get()
     
     if not doc.exists:
