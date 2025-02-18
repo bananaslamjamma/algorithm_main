@@ -26,7 +26,7 @@ logger = logging.getLogger("uvicorn.error")
 PENDING_TIME = 15  # Time window to collect requests (seconds)
 booking_queues = {}  # Dictionary to track queues per resource
 
-async def process_booking_queue(resource_id, booking_id):
+async def process_booking_queue(resource_id):
     # Process all the queued requests
     await sleep_with_progress()
     
@@ -75,7 +75,7 @@ async def process_booking_queue(resource_id, booking_id):
         print(best_request)
         # Approve the best request
         db.collection("bookings").document(best_request["id"]).update({"status": "approved"})
-        print("User won! " , best_request["id"])
+        print("User won! " , best_request["user_id"])
     print("is this empty?")
     # reject and delete all the loser requests stored
     while heap:
@@ -85,19 +85,19 @@ async def process_booking_queue(resource_id, booking_id):
             
     # update the DB so that HA devices can scan the change        
     update_space_data(resource_id, best_request)
-    delete_temp()
+    #delete_temp()
     
     # delete the booking after the time is over
     # needs another case if cancelled manually.
     doc_ref = db.collection("bookings").document(best_request["id"])
-    updated_doc = doc_ref.get()
+    #updated_doc = doc_ref.get()
 
     # move this or remove it
     try:
         timeout = int(best_request["timeout"])  # Convert to int
         if timeout > 0:
             print("Timeout is valid:", timeout)
-            asyncio.create_task(delete_after_timeout(doc_ref, timeout))
+            #asyncio.create_task(delete_after_timeout(doc_ref, timeout))
     except (ValueError, TypeError):
         print("Invalid timeout value:", best_request["timeout"])
 
@@ -116,10 +116,11 @@ def update_space_data(resource_id, best_request):
         
     space_data = {
         # change this to be user booked
-        "user_id": best_request["id"],
+        "user_id": best_request["user_id"],
         "date_booked": firestore.SERVER_TIMESTAMP,
         "status": "unauthorized",
         "is_booked": "true",
+        "booking_id": best_request["booking_id"],
         "timeout": int(best_request["timeout"]),
     }
 
@@ -171,11 +172,12 @@ async def book_desk(data: dict, background_tasks: BackgroundTasks):
         db.collection('temp').add(data)
         doc_ref = db.collection("bookings").document()
         booking_id = doc_ref.id
+        booking_data["booking_id"] = booking_id
         doc_ref.set(booking_data)  # Using set() to overwrite any existing document with the same ID
 
         # start a background task to process bookings after 10 seconds
         if resource_id not in booking_queues:
-            booking_queues[resource_id] = asyncio.create_task(process_booking_queue(resource_id, booking_id))
+            booking_queues[resource_id] = asyncio.create_task(process_booking_queue(resource_id))
             
 
         return {"message": "Booking request received"}
