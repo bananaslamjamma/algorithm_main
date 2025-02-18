@@ -80,7 +80,7 @@ async def process_booking_queue(resource_id):
     # reject and delete all the loser requests stored
     while heap:
             _, _, other_request = heapq.heappop(heap)
-            print("User lost! " , other_request["id"])
+            print("User lost! " , other_request["user_id"])
             db.collection("bookings").document(other_request["id"]).delete()
             
     # update the DB so that HA devices can scan the change        
@@ -122,6 +122,7 @@ def update_space_data(resource_id, best_request):
         "is_booked": "true",
         "booking_id": best_request["booking_id"],
         "timeout": int(best_request["timeout"]),
+        'time': best_request["time"]
     }
 
     doc_ref.update(space_data)  # Update fields
@@ -132,8 +133,11 @@ async def book_desk(data: dict, background_tasks: BackgroundTasks):
     try:
         user_id = data.get("user_id")
         resource_id = data.get("resource_id")
+        booking_type = data.get("bookingType")
+        time =  data.get("time")
         karma_points = data.get("karma_points", 1000)
         timeout = data.get("timeout")
+        booking_type = data.get("booking_type", "hotdesk")
         
         if not user_id or not resource_id:
             raise HTTPException(status_code=400, detail="Missing user_id or resource_id")
@@ -154,6 +158,8 @@ async def book_desk(data: dict, background_tasks: BackgroundTasks):
             "user_id": user_id,
             "resource_id": resource_id,
             "karma_points": karma_points,
+            'booking_type': booking_type,
+            'time': time,
             "timestamp": firestore.SERVER_TIMESTAMP,
             "status": "pending",
             "timeout": timeout
