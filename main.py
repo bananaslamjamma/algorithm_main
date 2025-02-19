@@ -116,6 +116,7 @@ def update_space_data(resource_id, best_request):
         
     space_data = {
         # change this to be user booked
+        "room_id": resource_id,
         "user_id": best_request["user_id"],
         "date_booked": firestore.SERVER_TIMESTAMP,
         "status": "unauthorized",
