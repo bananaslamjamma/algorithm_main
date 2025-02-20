@@ -23,7 +23,7 @@ app = FastAPI()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("uvicorn.error")
 
-PENDING_TIME = 15  # Time window to collect requests (seconds)
+PENDING_TIME = 10  # Time window to collect requests (seconds)
 booking_queues = {}  # Dictionary to track queues per resource
 
 async def process_booking_queue(resource_id):
