@@ -107,8 +107,18 @@ async def process_booking_queue(resource_id):
 
 def update_space_data(resource_id, best_request):
     print("Function entered!")
-    doc_ref = db.collection("spaces").document("hotdesks").collection("hotdesk_bookings").document(resource_id)
-    doc = doc_ref.get()
+    room_type = best_request["booking_type"]
+    # default
+    #doc_ref = db.collection("spaces").document("hotdesks").collection("hotdesk_bookings").document(resource_id)
+    #doc = doc_ref.get()
+    
+    if room_type == 'Hotdesk':
+            doc_ref = db.collection("spaces").document("hotdesks").collection("hotdesk_bookings").document(resource_id)
+            doc = doc_ref.get()
+    elif room_type == 'Conference Room':
+            doc_ref = db.collection("spaces").document("conference_rooms").collection("conference_rooms_bookings").document(resource_id)
+            doc = doc_ref.get()
+        
     
     if not doc.exists:
         # Create the document with a default structure
