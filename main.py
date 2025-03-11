@@ -112,31 +112,49 @@ def update_space_data(resource_id, best_request):
     #doc_ref = db.collection("spaces").document("hotdesks").collection("hotdesk_bookings").document(resource_id)
     #doc = doc_ref.get()
     
-    if room_type == 'Hotdesk':
-            doc_ref = db.collection("spaces").document("hotdesks").collection("hotdesk_bookings").document(resource_id)
-            doc = doc_ref.get()
-    elif room_type == 'Conference Room':
-            doc_ref = db.collection("spaces").document("conference_rooms").collection("conference_rooms_bookings").document(resource_id)
-            doc = doc_ref.get()
-        
-    
-    if not doc.exists:
-        # Create the document with a default structure
-         doc_ref.set({}, merge=True)
-        
-    space_data = {
+    space_data_hotdesks = {
         # change this to be user booked
         "room_id": resource_id,
         "user_id": best_request["user_id"],
-        "date_booked": firestore.SERVER_TIMESTAMP,
+        "date": best_request["date"],
         "status": "unauthorized",
         "is_booked": "true",
         "booking_id": best_request["booking_id"],
         "timeout": int(best_request["timeout"]),
         'time': best_request["time"]
     }
-
-    doc_ref.update(space_data)  # Update fields
+    
+    space_data_conference = {
+        # change this to be user booked
+        "room_id": resource_id,
+        "user_id": best_request["user_id"],
+        "date": best_request["date"],
+        "status": "unauthorized",
+        "is_booked": "true",
+        "booking_id": best_request["booking_id"],
+        "timeout": int(best_request["timeout"]),
+        "start_time": best_request["start_time"],
+        "end_time": best_request["end_time"],
+    }
+    
+    # create some default
+    data_type = { }
+    
+    if room_type == 'Hotdesk':
+            doc_ref = db.collection("spaces").document("hotdesks").collection("hotdesk_bookings").document(resource_id)
+            doc = doc_ref.get()
+            data_type = space_data_hotdesks
+    elif room_type == 'Conference Room':
+            doc_ref = db.collection("spaces").document("conference_rooms").collection("conference_rooms_bookings").document(resource_id)
+            doc = doc_ref.get()
+            data_type = space_data_conference
+        
+    
+    if not doc.exists:
+        # Create the document with a default structure
+         doc_ref.set({}, merge=True)
+        
+    doc_ref.update(data_type)  # Update fields
     print(f"Updated space data for resource: {resource_id}")
 
 @app.post("/book")
@@ -148,7 +166,10 @@ async def book_desk(data: dict, background_tasks: BackgroundTasks):
         time =  data.get("time")
         karma_points = data.get("karma_points", 1000)
         timeout = data.get("timeout")
+        date = data.get("date", firestore.SERVER_TIMESTAMP)
         booking_type = data.get("booking_type", "hotdesk")
+        start_time = data.get("start_time", "0:00")
+        end_time = data.get("end_time", "0:10")
         
         if not user_id or not resource_id:
             raise HTTPException(status_code=400, detail="Missing user_id or resource_id")
@@ -173,6 +194,9 @@ async def book_desk(data: dict, background_tasks: BackgroundTasks):
             'time': time,
             "timestamp": firestore.SERVER_TIMESTAMP,
             "status": "pending",
+            "date": date,
+            "start_time": start_time,
+            "end_time": end_time,
             "timeout": timeout
             #"name": name
         }
