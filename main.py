@@ -261,7 +261,7 @@ def on_snapshot(col_snapshot, changes, read_time):
             data = doc.to_dict()
 
             if data.get("is_booked") == "false":  # Check if status changed to False
-                resource_id = data["resource_id"]
+                resource_id = data["room_id"]
                 prev_end_time = data["end_time"]
                 date = data["date"]
 
