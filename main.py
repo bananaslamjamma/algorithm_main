@@ -289,9 +289,3 @@ def on_snapshot(col_snapshot, changes, read_time):
 col_query = db.collection("spaces").document("hotdesks").collection("hotdesk_bookings")
 doc_ref = db.collection("spaces").document("conference_rooms").collection("conference_rooms_bookings")
 query_watch = col_query.on_snapshot(on_snapshot)
-
-# Keep the script running
-print("Listening for status updates...")
-import time
-while True:
-    time.sleep(10)
