@@ -26,13 +26,22 @@ logger = logging.getLogger("uvicorn.error")
 PENDING_TIME = 10  # Time window to collect requests (seconds)
 booking_queues = {}  # Dictionary to track queues per resource
 
-async def process_booking_queue(resource_id):
+async def process_booking_queue(resource_id, booking_type):
     # Process all the queued requests
     await sleep_with_progress()
     
     print("Fetching Requests Stored...")
     # Fetch all requests for this resource
-    requests = list(db.collection("bookings").where("resource_id", "==", resource_id).stream())
+    requests = list(db.collection("bookings")
+                    .where("resource_id", "==", resource_id)
+                    .where("status", "==" "pending")
+                    .stream())
+    #if booking_type == 'Hotdesk':
+    #    requests = list(db.collection("bookings").where("resource_id", "==", resource_id).stream())
+    #elif booking_type == 'Conference Room':
+    #    requests = list(db.collection("bookings").where("resource_id", "==", resource_id).stream())
+
+    
     all_requests = list(db.collection('temp').stream())
     print(all_requests)
 
@@ -218,7 +227,7 @@ async def book_desk(data: dict, background_tasks: BackgroundTasks):
 
         # start a background task to process bookings after 10 seconds
         if resource_id not in booking_queues:
-            booking_queues[resource_id] = asyncio.create_task(process_booking_queue(resource_id))
+            booking_queues[resource_id] = asyncio.create_task(process_booking_queue(resource_id, booking_type))
             
 
         return {"message": "Booking request received"}
