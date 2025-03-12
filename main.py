@@ -289,4 +289,4 @@ def on_snapshot(col_snapshot, changes, read_time):
 # Set up listener for real-time updates
 #col_query = db.collection("spaces").document("hotdesks").collection("hotdesk_bookings")
 col_query = db.collection("spaces").document("conference_rooms").collection("conference_rooms_bookings")
-query_watch = col_query.on_snapshot(on_snapshot)
+# query_watch = col_query.on_snapshot(on_snapshot)
