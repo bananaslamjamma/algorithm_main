@@ -281,7 +281,7 @@ def on_snapshot(col_snapshot, changes, read_time):
 
                 for next_booking in next_booking_docs:
                     next_booking_ref = db.collection("bookings").document(next_booking.id)
-                    update_space_data(next_booking[resource_id], next_booking)
+                    update_space_data(next_booking_ref[resource_id], next_booking)
                     #next_booking_ref.update({"status": True})  # Activate next booking
                     print(f"Next booking {next_booking.id} activated!")
 
