@@ -281,11 +281,12 @@ def on_snapshot(col_snapshot, changes, read_time):
 
                 for next_booking in next_booking_docs:
                     next_booking_ref = db.collection("bookings").document(next_booking.id)
+                    print(next_booking_ref)
                     update_space_data(next_booking_ref[resource_id], next_booking)
                     #next_booking_ref.update({"status": True})  # Activate next booking
                     print(f"Next booking {next_booking.id} activated!")
 
 # Set up listener for real-time updates
-col_query = db.collection("spaces").document("hotdesks").collection("hotdesk_bookings")
-doc_ref = db.collection("spaces").document("conference_rooms").collection("conference_rooms_bookings")
+#col_query = db.collection("spaces").document("hotdesks").collection("hotdesk_bookings")
+col_query = db.collection("spaces").document("conference_rooms").collection("conference_rooms_bookings")
 query_watch = col_query.on_snapshot(on_snapshot)
