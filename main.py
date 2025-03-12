@@ -34,7 +34,7 @@ async def process_booking_queue(resource_id, booking_type):
     # Fetch all requests for this resource
     requests = list(db.collection("bookings")
                     .where("resource_id", "==", resource_id)
-                    .where("status", "==" "pending")
+                    .where("status", "==", "pending")
                     .stream())
     #if booking_type == 'Hotdesk':
     #    requests = list(db.collection("bookings").where("resource_id", "==", resource_id).stream())
