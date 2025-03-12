@@ -260,7 +260,7 @@ def on_snapshot(col_snapshot, changes, read_time):
             doc = change.document
             data = doc.to_dict()
 
-            if data.get("status") is False:  # Check if status changed to False
+            if data.get("status") == "false":  # Check if status changed to False
                 resource_id = data["resource_id"]
                 prev_end_time = data["end_time"]
                 date = data["date"]
