@@ -36,12 +36,7 @@ async def process_booking_queue(resource_id, booking_type):
                     .where("resource_id", "==", resource_id)
                     .where("status", "==", "pending")
                     .stream())
-    #if booking_type == 'Hotdesk':
-    #    requests = list(db.collection("bookings").where("resource_id", "==", resource_id).stream())
-    #elif booking_type == 'Conference Room':
-    #    requests = list(db.collection("bookings").where("resource_id", "==", resource_id).stream())
 
-    
     all_requests = list(db.collection('temp').stream())
     print(all_requests)
 
@@ -254,3 +249,49 @@ def delete_temp():
     for doc in docs:
         print(f'Deleting doc {doc.id} => {doc.to_dict()}')
         doc.reference.delete()
+        
+def on_snapshot(col_snapshot, changes, read_time):
+    """
+    Firestore listener callback: Checks for the next sequential booking
+    when a booking's status is flipped to False.
+    """
+    for change in changes:
+        if change.type.name == "MODIFIED":  # Detect field updates
+            doc = change.document
+            data = doc.to_dict()
+
+            if data.get("status") is False:  # Check if status changed to False
+                resource_id = data["resource_id"]
+                prev_end_time = data["end_time"]
+                date = data["date"]
+
+                print(f"Booking ended: {doc.id}, checking next booking...")
+
+                # Query the next sequential booking
+                next_booking_query = (
+                    db.collection("bookings")
+                    .where("resource_id", "==", resource_id)
+                    .where("start_time", "==", prev_end_time)  # Match next time slot
+                    .where("date", "==", date)  # Ensure same date
+                    .order_by("start_time")
+                    .limit(1)
+                )
+
+                next_booking_docs = next_booking_query.stream()
+
+                for next_booking in next_booking_docs:
+                    next_booking_ref = db.collection("bookings").document(next_booking.id)
+                    update_space_data(next_booking[resource_id], next_booking)
+                    #next_booking_ref.update({"status": True})  # Activate next booking
+                    print(f"Next booking {next_booking.id} activated!")
+
+# Set up listener for real-time updates
+col_query = db.collection("spaces").document("hotdesks").collection("hotdesk_bookings")
+doc_ref = db.collection("spaces").document("conference_rooms").collection("conference_rooms_bookings")
+query_watch = col_query.on_snapshot(on_snapshot)
+
+# Keep the script running
+print("Listening for status updates...")
+import time
+while True:
+    time.sleep(10)
