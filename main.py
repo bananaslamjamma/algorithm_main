@@ -203,7 +203,7 @@ async def book_desk(data: dict, background_tasks: BackgroundTasks):
     
         if any(existing_booking):
             print("Resource already booked!")
-            return {"message": "Booking failed. Resource already booked.", "status": "denied"}
+            #return {"message": "Booking failed. Resource already booked.", "status": "denied"}
         
         # get firestore server timestamp
         # data["timestamp"] = firestore.SERVER_TIMESTAMP
