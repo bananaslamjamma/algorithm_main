@@ -259,6 +259,8 @@ def on_snapshot(col_snapshot, changes, read_time):
         if change.type.name == "MODIFIED":  # Detect field updates
             doc = change.document
             data = doc.to_dict()
+            print("Yarr booty:")
+            print(data)
 
             if data.get("is_booked") == "false":  # Check if status changed to False
                 resource_id = data["room_id"]
@@ -273,11 +275,13 @@ def on_snapshot(col_snapshot, changes, read_time):
                     .where("resource_id", "==", resource_id)
                     .where("start_time", "==", prev_end_time)  # Match next time slot
                     .where("date", "==", date)  # Ensure same date
-                    .order_by("start_time")
+                    .where("start_time", "==", prev_end_time)
                     .limit(1)
                 )
 
                 next_booking_docs = next_booking_query.stream()
+                print("YARRR 2")
+                print(next_booking_docs)
 
                 for next_booking in next_booking_docs:
                     next_booking_ref = db.collection("bookings").document(next_booking.id)
@@ -289,4 +293,4 @@ def on_snapshot(col_snapshot, changes, read_time):
 # Set up listener for real-time updates
 #col_query = db.collection("spaces").document("hotdesks").collection("hotdesk_bookings")
 col_query = db.collection("spaces").document("conference_rooms").collection("conference_rooms_bookings")
-# query_watch = col_query.on_snapshot(on_snapshot)
+query_watch = col_query.on_snapshot(on_snapshot)
