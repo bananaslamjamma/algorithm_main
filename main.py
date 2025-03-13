@@ -307,6 +307,10 @@ def on_snapshot(col_snapshot, changes, read_time):
                     closest_time = None
                     print("I did the query")
                     print(fallback_query)
+                    fallback_docs = list(fallback_query)
+                    print(fallback_docs)
+                    check = fallback_docs.to_dict()
+                    print(check)
                     
                     #for doc in fallback_query:
                     #    stored_time = parse_time(data["start_time"])                        
