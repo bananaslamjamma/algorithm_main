@@ -287,7 +287,7 @@ def on_snapshot(col_snapshot, changes, read_time):
                 )
                 docs = next_booking_query.get()
                 
-                if not docs:  
+                if docs.empty:  
                     print("No next booking available, searching for the next available booking...")
 
                     fallback_query = (
@@ -301,7 +301,7 @@ def on_snapshot(col_snapshot, changes, read_time):
 
                     docs = fallback_query.get()
                 
-                if not docs:  
+                if  docs.empty:  
                     print("No next booking available, breaking...")
                     return 
                 
