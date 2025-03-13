@@ -251,44 +251,38 @@ def delete_temp():
         doc.reference.delete()
         
 def on_snapshot(col_snapshot, changes, read_time):
-    """
-    Firestore listener callback: Checks for the next sequential booking
-    when a booking's status is flipped to False.
-    """
+    #Firestore listener callback: Checks for the next sequential booking
     for change in changes:
-        if change.type.name == "MODIFIED":  # Detect field updates
+        if change.type.name == "MODIFIED":  # detect field updates
             doc = change.document
             data = doc.to_dict()
             print("Yarr booty:")
             print(data)
 
-            if data.get("is_booked") == "false":  # Check if status changed to False
+            if data.get("is_booked") == "false":  # check if status changed to False
                 resource_id = data["room_id"]
                 prev_end_time = data["end_time"]
                 date = data["date"]
 
                 print(f"Booking ended: {doc.id}, checking next booking...")
 
-                # Query the next sequential booking
+                # query the next sequential booking
                 next_booking_query = (
                     db.collection("bookings")
                     .where(filter=FieldFilter("resource_id", "==", resource_id))
-                    .where(filter=FieldFilter("start_time", "==", prev_end_time))  # Match next time slot
-                    .where(filter=FieldFilter("date", "==", date))  # Ensure same date
-                    .where(filter=FieldFilter("start_time", "==", prev_end_time))
+                    .where(filter=FieldFilter("start_time", "==", prev_end_time)) 
+                    .where(filter=FieldFilter("date", "==", date))  
                     .limit(1)
                 )
-
-                print("YARR 3")
-                #next_booking_ref = db.collection("bookings").where(filter=FieldFilter("resource_id", "==", resource_id))
                 docs = next_booking_query.get()
-                for doc in docs:  # Iterate through results
-                    data = doc.to_dict()  # Convert Firestore document to dictionary
-                    print(data)  # Print or use the data
+                for doc in docs:  
+                    data = doc.to_dict()  
+                    print(data)  
                 
                     
                 update_space_data(resource_id, data)
-                doc.delete()
+                # delete the old entry after being done with it
+                db.collection("bookings").document(doc.id).delete()
                 print(f"Next booking {data["booking_id"]} at {data["start_time"]} activated!")
 
 # Set up listener for real-time updates
