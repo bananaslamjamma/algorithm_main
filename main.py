@@ -283,15 +283,14 @@ def on_snapshot(col_snapshot, changes, read_time):
                 print("YARRR 2")
                 print(next_booking_docs)
 
-                for next_booking in next_booking_docs:
-                    print("YARR 3")
-                    print(next_booking)
-                    print(next_booking.id)
-                    next_booking_ref = db.collection("bookings").where(filter=FieldFilter("resource_id", "==", next_booking[resource_id]))
-                    print(next_booking_ref)
-                    update_space_data(next_booking_ref[resource_id], next_booking)
-                    #next_booking_ref.update({"status": True})  # Activate next booking
-                    print(f"Next booking {next_booking.id} activated!")
+                print("YARR 3")
+                print(next_booking_docs)
+                print(next_booking_docs.id)
+                next_booking_ref = db.collection("bookings").where(filter=FieldFilter("resource_id", "==", next_booking_docs[resource_id]))
+                print(next_booking_ref)
+                update_space_data(next_booking_ref[resource_id], next_booking_ref)
+                #next_booking_ref.update({"status": True})  # Activate next booking
+                print(f"Next booking {next_booking_docs.id} activated!")
 
 # Set up listener for real-time updates
 #col_query = db.collection("spaces").document("hotdesks").collection("hotdesk_bookings")
