@@ -295,10 +295,10 @@ def on_snapshot(col_snapshot, changes, read_time):
                 prev_time_str = prev_end_time
                 time_format = "%H:%M"  # Time format (HH:MM)
                 prev_end_time = datetime.strptime(prev_time_str, time_format)
+                print(prev_end_time)
                 
                 if len(docs) == 0:  
                     print("No next booking available, searching for the next available booking...")
-
                     fallback_query = list(
                         db.collection("bookings")
                         .where(filter=FieldFilter("resource_id", "==", resource_id))
