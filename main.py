@@ -299,12 +299,12 @@ def on_snapshot(col_snapshot, changes, read_time):
                 if len(docs) == 0:  
                     print("No next booking available, searching for the next available booking...")
 
-                    fallback_query = (
+                    fallback_query = list(
                         db.collection("bookings")
                         .where(filter=FieldFilter("resource_id", "==", resource_id))
                         .where(filter=FieldFilter("booking_id", "!=", current_booking_id)) 
                         .where(filter=FieldFilter("date", "==", date))
-                    )
+                    .stream())
                     closest_time = None
                     
                     for doc in fallback_query:
