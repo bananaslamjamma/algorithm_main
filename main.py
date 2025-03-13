@@ -288,8 +288,8 @@ def on_snapshot(col_snapshot, changes, read_time):
                 
                     
                 update_space_data(resource_id, data)
-                #next_booking_ref.update({"status": True})  # Activate next booking
-                print(f"Next booking {data.id} activated!")
+                doc.delete()
+                print(f"Next booking {data["booking_id"]} at {data["start_time"]} activated!")
 
 # Set up listener for real-time updates
 #col_query = db.collection("spaces").document("hotdesks").collection("hotdesk_bookings")
