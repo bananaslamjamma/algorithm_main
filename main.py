@@ -306,6 +306,7 @@ def on_snapshot(col_snapshot, changes, read_time):
                         .where(filter=FieldFilter("date", "==", date))
                     .stream())
                     closest_time = None
+                    print("I did the query")
                     
                     for doc in fallback_query:
                         stored_time = parse_time(data["start_time"])
