@@ -280,8 +280,8 @@ def on_snapshot(col_snapshot, changes, read_time):
                 )
 
                 print("YARR 3")
-                next_booking_ref = db.collection("bookings").where(filter=FieldFilter("resource_id", "==", resource_id))
-                docs = next_booking_ref.get()
+                #next_booking_ref = db.collection("bookings").where(filter=FieldFilter("resource_id", "==", resource_id))
+                docs = next_booking_query.get()
                 for doc in docs:  # Iterate through results
                     data = doc.to_dict()  # Convert Firestore document to dictionary
                     print(data)  # Print or use the data
