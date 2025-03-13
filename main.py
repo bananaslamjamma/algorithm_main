@@ -32,13 +32,13 @@ async def process_booking_queue(resource_id, booking_type, start_time, time, dat
     
     print("Fetching Requests Stored...")
     # Fetch all requests for this resource
-    
+    # this should separate requests accordingly and not bundle them together
     if booking_type == 'Hotdesk':
         requests = list(db.collection("bookings")
                         .where(filter=FieldFilter("resource_id", "==", resource_id))
                         .where(filter=FieldFilter("status", "==", "pending"))
                         .where(filter=FieldFilter("time", "==", time))
-                        .where(filter=FieldFilter("start_time", "==", start_time))   
+                        .where(filter=FieldFilter("date", "==", date))   
                         .stream())
     elif  booking_type == 'Conference Room':
         requests = list(db.collection("bookings")
@@ -84,7 +84,6 @@ async def process_booking_queue(resource_id, booking_type, start_time, time, dat
     heap = [(-data["karma_points"], data["timestamp"], data) for data in user_requests]
     heapq.heapify(heap)
     print("Processing Queue...")
-    print(heap)
     if heap:
         _, _, best_request = heapq.heappop(heap)
         print(best_request)
