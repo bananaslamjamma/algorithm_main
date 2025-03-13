@@ -264,6 +264,31 @@ def delete_temp():
         
 def parse_time(time_str):
     return datetime.strptime(time_str, "%H:%M").time()
+
+def parse_next_time_slot(resource_id, prev_end_time, current_booking_id, date):
+    
+    if len(docs) == 0:  
+        print("No next booking available, searching for the next available booking...")
+        fallback_query = (
+           db.collection("bookings") 
+            .where(filter=FieldFilter("resource_id", "==", resource_id)) 
+            .where(filter=FieldFilter("booking_id", "!=", current_booking_id)) 
+            .where(filter=FieldFilter("date", "==", date)) 
+            )
+        docs = fallback_query.get()
+        closest_time = None
+        print("I did the query")
+        print(fallback_query)  # ✅ Prints the list of DocumentSnapshots
+
+        fallback_docs = list(fallback_query)  # ✅ Convert query results to list
+        print(f"Found {len(fallback_docs)} documents")
+                    
+        for doc in fallback_query:
+            data = doc.to_dict()
+            stored_time = parse_time(data["start_time"])                        
+            if closest_time is None or stored_time < closest_time:
+                closest_time = stored_time
+                docs = doc   
         
 def on_snapshot(col_snapshot, changes, read_time):
     #Firestore listener callback: Checks for the next sequential booking
@@ -292,37 +317,13 @@ def on_snapshot(col_snapshot, changes, read_time):
                     .limit(1)
                 )
                 docs = next_booking_query.get()
-                seq_docs = list(docs)  # ✅ Convert query results to list
-                print(f"Found {len(seq_docs)} documents")
-                
                 prev_time_str = prev_end_time
                 time_format = "%H:%M"  # Time format (HH:MM)
                 prev_end_time = datetime.strptime(prev_time_str, time_format)
                 print(prev_end_time)
                 
-                if len(docs) == 0:  
-                    print("No next booking available, searching for the next available booking...")
-                    fallback_query = (
-                        db.collection("bookings") 
-                        .where(filter=FieldFilter("resource_id", "==", resource_id)) 
-                        .where(filter=FieldFilter("endtime", "!=", data["end_time"])) 
-                        .where(filter=FieldFilter("date", "==", date)) 
-                    )
-                    docs = fallback_query.get()
-                    closest_time = None
-                    print("I did the query")
-                    #print(fallback_query)  # ✅ Prints the list of DocumentSnapshots
-
-                    fallback_docs = list(fallback_query)  # ✅ Convert query results to list
-                    print(f"Found {len(fallback_docs)} documents")
-                    
-                    #for doc in fallback_query:
-                    #    stored_time = parse_time(data["start_time"])                        
-                    #    if closest_time is None or stored_time < closest_time:
-                    #        closest_time = stored_time
-                    #        docs = doc
-                            
-                print(closest_time)                                                            
+                parse_next_time_slot(resource_id, prev_end_time, current_booking_id, date)
+                                                                                     
                 if len(docs) == 0: 
                     print("No next booking available, breaking...")
                     return 
