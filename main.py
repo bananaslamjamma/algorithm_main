@@ -80,7 +80,7 @@ async def process_booking_queue(resource_id, booking_type, start_time, time, dat
     # convert to priority queue higher karma wins 
     # if tie earliest timestamp wins
     print("Raw: ")
-    print(requests)
+    #print(requests)
     heap = [(-data["karma_points"], data["timestamp"], data) for data in user_requests]
     heapq.heapify(heap)
     print("Processing Queue...")
@@ -286,8 +286,23 @@ def on_snapshot(col_snapshot, changes, read_time):
                     .limit(1)
                 )
                 docs = next_booking_query.get()
+                
                 if not docs:  
-                    print("No next sequential booking found. Stopping function.")
+                    print("No next booking available, searching for the next available booking...")
+
+                    fallback_query = (
+                        db.collection("bookings")
+                        .where(filter=FieldFilter("resource_id", "==", resource_id))
+                        .where(filter=FieldFilter("start_time", ">", prev_end_time))  # Find any booking after prev_end_time
+                        .where(filter=FieldFilter("date", "==", date))
+                        .order_by("start_time")  # Sort to get the closest available booking
+                        .limit(1)
+                    )
+
+                    docs = fallback_query.get()
+                
+                if not docs:  
+                    print("No next booking available, breaking...")
                     return 
                 
                 for doc in docs:  
