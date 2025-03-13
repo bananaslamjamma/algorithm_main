@@ -295,13 +295,13 @@ def on_snapshot(col_snapshot, changes, read_time):
                         .where(filter=FieldFilter("resource_id", "==", resource_id))
                         .where(filter=FieldFilter("start_time", ">", prev_end_time))  # Find any booking after prev_end_time
                         .where(filter=FieldFilter("date", "==", date))
-                        .order_by("start_time")  # Sort to get the closest available booking
-                        .limit(1)
+                        #.order_by("start_time")  # Sort to get the closest available booking
+                        .limit(1).get()
                     )
 
-                    docs = fallback_query.get()
+                    docs = fallback_query
                     print("hu")
-                    print(docs)  
+                    print(fallback_query)  
                             
                 if len(docs) == 0: 
                     print("No next booking available, breaking...")
