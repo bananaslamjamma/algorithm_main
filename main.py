@@ -287,7 +287,7 @@ def on_snapshot(col_snapshot, changes, read_time):
                     print(data)  # Print or use the data
                 
                     
-                update_space_data(data[resource_id], data)
+                update_space_data(resource_id, data)
                 #next_booking_ref.update({"status": True})  # Activate next booking
                 print(f"Next booking {data.id} activated!")
 
