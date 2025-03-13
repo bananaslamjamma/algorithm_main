@@ -86,7 +86,6 @@ async def process_booking_queue(resource_id, booking_type, start_time, time, dat
     print("Processing Queue...")
     if heap:
         _, _, best_request = heapq.heappop(heap)
-        print(best_request)
         # Approve the best request
         db.collection("bookings").document(best_request["id"]).update({"status": "approved"})
         print("User won! " , best_request["user_id"])
@@ -116,7 +115,7 @@ async def process_booking_queue(resource_id, booking_type, start_time, time, dat
         print("Invalid timeout value:", best_request["timeout"])
 
     # clean up the queue
-    del booking_queues[resource_id]
+    del booking_queues[resource_id, booking_type, start_time, time, date]
     print("Finished, cleaning up...")
 
 def update_space_data(resource_id, best_request):
