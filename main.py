@@ -300,8 +300,10 @@ def on_snapshot(col_snapshot, changes, read_time):
                     )
 
                     docs = fallback_query.get()
-                
-                if  len(docs) == 0:  
+                    print("hu")
+                    print(docs)  
+                            
+                if len(docs) == 0: 
                     print("No next booking available, breaking...")
                     return 
                 
