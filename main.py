@@ -296,7 +296,23 @@ def on_snapshot(col_snapshot, changes, read_time):
                 time_format = "%H:%M"  # Time format (HH:MM)
                 prev_end_time = datetime.strptime(prev_time_str, time_format)
                 print(prev_end_time)
-                                                         
+                
+                if len(docs) == 0:  
+                    print("No next booking available, searching for the next available booking...")
+                    fallback_query = db.collection("bookings") \
+                        .where(filter=FieldFilter("resource_id", "==", resource_id)) \
+                        .where(filter=FieldFilter("booking_id", "!=", current_booking_id)) \
+                        .where(filter=FieldFilter("date", "==", date)) \
+                        .stream()
+                    closest_time = None
+                    print("I did the query")
+                    
+                    for doc in fallback_query:
+                        stored_time = parse_time(data["start_time"])
+                        
+                        if closest_time is None or stored_time < closest_time:
+                            closest_time = stored_time
+                            docs = doc                                                
                 if len(docs) == 0: 
                     print("No next booking available, breaking...")
                     return 
