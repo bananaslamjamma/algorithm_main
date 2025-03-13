@@ -306,12 +306,14 @@ def on_snapshot(col_snapshot, changes, read_time):
                         .stream()
                     closest_time = None
                     print("I did the query")
+                    print(fallback_query)
                     
-                    for doc in fallback_query:
-                        stored_time = parse_time(data["start_time"])                        
-                        if closest_time is None or stored_time < closest_time:
-                            closest_time = stored_time
-                            docs = doc
+                    #for doc in fallback_query:
+                    #    stored_time = parse_time(data["start_time"])                        
+                    #    if closest_time is None or stored_time < closest_time:
+                    #        closest_time = stored_time
+                    #        docs = doc
+                            
                 print(closest_time)                                                            
                 if len(docs) == 0: 
                     print("No next booking available, breaking...")
