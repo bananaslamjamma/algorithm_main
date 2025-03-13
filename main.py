@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 import heapq
 import json
 import os
@@ -261,6 +262,9 @@ def delete_temp():
         print(f'Deleting doc {doc.id} => {doc.to_dict()}')
         doc.reference.delete()
         
+def parse_time(time_str):
+    return datetime.strptime(time_str, "%H:%M").time()
+        
 def on_snapshot(col_snapshot, changes, read_time):
     #Firestore listener callback: Checks for the next sequential booking
     for change in changes:
@@ -274,6 +278,7 @@ def on_snapshot(col_snapshot, changes, read_time):
                 resource_id = data["room_id"]
                 prev_end_time = data["end_time"]
                 date = data["date"]
+                current_booking_id = data["booking_id"]
 
                 print(f"Booking ended: {doc.id}, checking next booking...")
 
@@ -286,6 +291,9 @@ def on_snapshot(col_snapshot, changes, read_time):
                     .limit(1)
                 )
                 docs = next_booking_query.get()
+                prev_time_str = prev_end_time
+                time_format = "%H:%M"  # Time format (HH:MM)
+                prev_end_time = datetime.strptime(prev_time_str, time_format)
                 
                 if len(docs) == 0:  
                     print("No next booking available, searching for the next available booking...")
@@ -293,16 +301,17 @@ def on_snapshot(col_snapshot, changes, read_time):
                     fallback_query = (
                         db.collection("bookings")
                         .where(filter=FieldFilter("resource_id", "==", resource_id))
-                        .where(filter=FieldFilter("start_time", ">", prev_end_time))  # Find any booking after prev_end_time
+                        .where(filter=FieldFilter("booking_id", "!=", current_booking_id)) 
                         .where(filter=FieldFilter("date", "==", date))
-                        #.order_by("start_time")  # Sort to get the closest available booking
-                        .limit(1).get()
                     )
-
-                    docs = fallback_query
-                    print("hu")
-                    print(fallback_query)  
-                            
+                    closest_time = None
+                    
+                    for doc in fallback_query:
+                        stored_time = parse_time(data["start_time"])
+                        
+                        if closest_time is None or stored_time < closest_time:
+                            closest_time = stored_time
+                            docs = doc                                                
                 if len(docs) == 0: 
                     print("No next booking available, breaking...")
                     return 
