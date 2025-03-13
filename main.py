@@ -303,14 +303,13 @@ def on_snapshot(col_snapshot, changes, read_time):
                         .where(filter=FieldFilter("resource_id", "==", resource_id)) \
                         .where(filter=FieldFilter("booking_id", "!=", current_booking_id)) \
                         .where(filter=FieldFilter("date", "==", date)) \
-                        .stream()
+                        .get()
                     closest_time = None
                     print("I did the query")
-                    print(fallback_query)
-                    fallback_docs = list(fallback_query)
-                    print(fallback_docs)
-                    check = fallback_docs.to_dict()
-                    print(check)
+                    print(fallback_query)  # ✅ Prints the list of DocumentSnapshots
+
+                    fallback_docs = list(fallback_query)  # ✅ Convert query results to list
+                    print(f"Found {len(fallback_docs)} documents")
                     
                     #for doc in fallback_query:
                     #    stored_time = parse_time(data["start_time"])                        
