@@ -33,8 +33,8 @@ async def process_booking_queue(resource_id, booking_type):
     print("Fetching Requests Stored...")
     # Fetch all requests for this resource
     requests = list(db.collection("bookings")
-                    .where("resource_id", "==", resource_id)
-                    .where("status", "==", "pending")
+                    .where(filter=FieldFilter("resource_id", "==", resource_id))
+                    .where(filter=FieldFilter("status", "==", "pending"))
                     .stream())
 
     all_requests = list(db.collection('temp').stream())
@@ -272,10 +272,10 @@ def on_snapshot(col_snapshot, changes, read_time):
                 # Query the next sequential booking
                 next_booking_query = (
                     db.collection("bookings")
-                    .where("resource_id", "==", resource_id)
-                    .where("start_time", "==", prev_end_time)  # Match next time slot
-                    .where("date", "==", date)  # Ensure same date
-                    .where("start_time", "==", prev_end_time)
+                    .where(filter=FieldFilter("resource_id", "==", resource_id))
+                    .where(filter=FieldFilter("start_time", "==", prev_end_time))  # Match next time slot
+                    .where(filter=FieldFilter("date", "==", date))  # Ensure same date
+                    .where(filter=FieldFilter("start_time", "==", prev_end_time))
                     .limit(1)
                 )
 
@@ -284,7 +284,10 @@ def on_snapshot(col_snapshot, changes, read_time):
                 print(next_booking_docs)
 
                 for next_booking in next_booking_docs:
-                    next_booking_ref = db.collection("bookings").document(next_booking.id)
+                    print("YARR 3")
+                    print(next_booking)
+                    print(next_booking.id)
+                    next_booking_ref = db.collection("bookings").where(filter=FieldFilter("resource_id", "==", next_booking[resource_id]))
                     print(next_booking_ref)
                     update_space_data(next_booking_ref[resource_id], next_booking)
                     #next_booking_ref.update({"status": True})  # Activate next booking
