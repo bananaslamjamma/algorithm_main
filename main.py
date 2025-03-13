@@ -281,6 +281,7 @@ def on_snapshot(col_snapshot, changes, read_time):
                 current_booking_id = data["booking_id"]
 
                 print(f"Booking ended: {doc.id}, checking next booking...")
+                print(prev_end_time)
 
                 # query the next sequential booking
                 next_booking_query = (
