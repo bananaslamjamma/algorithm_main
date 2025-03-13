@@ -229,10 +229,12 @@ async def book_desk(data: dict, background_tasks: BackgroundTasks):
         booking_id = doc_ref.id
         booking_data["booking_id"] = booking_id
         doc_ref.set(booking_data)  # Using set() to overwrite any existing document with the same ID
+        
+        booking_key = (resource_id, booking_type, start_time, time, date)
 
         # start a background task to process bookings after 10 seconds
         if resource_id not in booking_queues:
-            booking_queues[resource_id] = asyncio.create_task(process_booking_queue(resource_id, booking_type, start_time, time, date))
+            booking_queues[resource_id, booking_type, start_time, time, date] = asyncio.create_task(process_booking_queue(resource_id, booking_type, start_time, time, date))
             
 
         return {"message": "Booking request received"}
