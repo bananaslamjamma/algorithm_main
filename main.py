@@ -279,19 +279,17 @@ def on_snapshot(col_snapshot, changes, read_time):
                     .limit(1)
                 )
 
-                next_booking_docs = next_booking_query.stream()
-                print("YARRR 2")
-                print(next_booking_docs)
-                data = next_booking_docs.to_dict()
-
                 print("YARR 3")
-                print(data)
                 next_booking_ref = db.collection("bookings").where(filter=FieldFilter("resource_id", "==", data[resource_id]))
-                print(next_booking_ref)
-                booking_data = next_booking_ref.to_dict()
-                update_space_data(data[resource_id], booking_data)
+                docs = next_booking_ref.get()
+                for doc in docs:  # Iterate through results
+                    data = doc.to_dict()  # Convert Firestore document to dictionary
+                    print(data)  # Print or use the data
+                
+                    
+                update_space_data(data[resource_id], data)
                 #next_booking_ref.update({"status": True})  # Activate next booking
-                print(f"Next booking {next_booking_docs.id} activated!")
+                print(f"Next booking {data.id} activated!")
 
 # Set up listener for real-time updates
 #col_query = db.collection("spaces").document("hotdesks").collection("hotdesk_bookings")
