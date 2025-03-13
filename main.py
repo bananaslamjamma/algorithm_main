@@ -282,13 +282,14 @@ def on_snapshot(col_snapshot, changes, read_time):
                 next_booking_docs = next_booking_query.stream()
                 print("YARRR 2")
                 print(next_booking_docs)
+                data = next_booking_docs.to_dict()
 
                 print("YARR 3")
-                print(next_booking_docs)
-                print(next_booking_docs.id)
-                next_booking_ref = db.collection("bookings").where(filter=FieldFilter("resource_id", "==", next_booking_docs[resource_id]))
+                print(data)
+                next_booking_ref = db.collection("bookings").where(filter=FieldFilter("resource_id", "==", data[resource_id]))
                 print(next_booking_ref)
-                update_space_data(next_booking_ref[resource_id], next_booking_ref)
+                booking_data = next_booking_ref.to_dict()
+                update_space_data(data[resource_id], booking_data)
                 #next_booking_ref.update({"status": True})  # Activate next booking
                 print(f"Next booking {next_booking_docs.id} activated!")
 
