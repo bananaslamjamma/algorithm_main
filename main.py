@@ -321,7 +321,8 @@ def on_snapshot(col_snapshot, changes, read_time):
                 prev_end_time = datetime.strptime(prev_time_str, time_format)
                 print(prev_end_time)
                 
-                parse_next_time_slot(resource_id, prev_end_time, current_booking_id, date)
+                # this is not working
+                #parse_next_time_slot(resource_id, prev_end_time, current_booking_id, date)
                                                                                      
                 if len(docs) == 0: 
                     print("No next booking available, breaking...")
