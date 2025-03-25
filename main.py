@@ -122,6 +122,15 @@ async def process_booking_queue(resource_id, booking_type, start_time, time, dat
 def update_space_data(resource_id, best_request):
     print("Function entered!")
     room_type = best_request["booking_type"]
+    #try:
+    #    day_of_time = best_request["time"]
+    #except KeyError:
+    #    day_of_time = "None"  # Default value
+           
+    fmt = "%H:%M"
+    start = datetime.strptime(best_request["start_time"], fmt)
+    end = datetime.strptime(best_request["end_time"], fmt)
+    difference = int((end - start).total_seconds() / 60)
     # default
     #doc_ref = db.collection("spaces").document("hotdesks").collection("hotdesk_bookings").document(resource_id)
     #doc = doc_ref.get()
@@ -134,7 +143,7 @@ def update_space_data(resource_id, best_request):
         "status": "unauthorized",
         "is_booked": "true",
         "booking_id": best_request["booking_id"],
-        "timeout": int(best_request["timeout"]),
+        "timeout": 60,
         'time': best_request["time"]
     }
     
@@ -146,7 +155,7 @@ def update_space_data(resource_id, best_request):
         "status": "unauthorized",
         "is_booked": "true",
         "booking_id": best_request["booking_id"],
-        "timeout": int(best_request["timeout"]),
+        "timeout": difference,
         "start_time": best_request["start_time"],
         "end_time": best_request["end_time"],
     }
@@ -189,14 +198,12 @@ async def book_desk(data: dict, background_tasks: BackgroundTasks):
             raise HTTPException(status_code=400, detail="Missing user_id or resource_id")
         
         print("Booking Request Received!")
-        # check if the resource is already booked
-        # don't have time to currently check if dates match
+
         existing_booking = (
             db.collection("bookings")
             .where(filter=FieldFilter("resource_id", "==", resource_id))
             .where(filter=FieldFilter("status", "==", "approved"))
-            #.where("start_time", ">=", "2025-02-17T00:00") 
-            #.where("end_time", "<=", "2025-02-17T23:59") 
+
             .stream()
         )
         
