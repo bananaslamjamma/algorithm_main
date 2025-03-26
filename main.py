@@ -273,7 +273,29 @@ def parse_time(time_str):
     return datetime.strptime(time_str, "%H:%M").time()
 
 def parse_next_time_slot(resource_id, prev_end_time, current_booking_id, date):
-    
+    print("No next booking available, searching for the next available booking...")
+    fallback_query = (
+        db.collection("bookings") 
+        .where(filter=FieldFilter("resource_id", "==", resource_id)) 
+        .where(filter=FieldFilter("booking_id", "!=", current_booking_id)) 
+        .where(filter=FieldFilter("date", "==", date)) 
+        )
+    docs = fallback_query.get()
+    closest_time = None
+    print("I did the query")
+    print(fallback_query)  # ✅ Prints the list of DocumentSnapshots
+
+    fallback_docs = list(fallback_query)  # ✅ Convert query results to list
+    print(f"Found {len(fallback_docs)} documents")
+                    
+    for doc in fallback_query:
+        data = doc.to_dict()
+        stored_time = parse_time(data["start_time"])                        
+        if closest_time is None or stored_time < closest_time:
+            closest_time = stored_time
+            docs = doc   
+#remove if not used
+def parse_next_time_slot_hotdesk(resource_id, prev_end_time, current_booking_id, date):
     print("No next booking available, searching for the next available booking...")
     fallback_query = (
         db.collection("bookings") 
@@ -344,8 +366,53 @@ def on_snapshot(col_snapshot, changes, read_time):
                 # delete the old entry after being done with it
                 db.collection("bookings").document(doc.id).delete()
                 print(f"Next booking {data["booking_id"]} at {data["start_time"]} activated!")
+                
+def my_custom_listener(doc_snapshot, changes, read_time):
+    for change in changes:
+        if change.type.name == "REMOVED":
+            doc = change.document
+            data = doc.to_dict()
+            print("Yarr booty:")
+            print(data)
+            resource_id = data["room_id"]
+            date = data["date"]
+            timeslot = data["time"]
+            
+            hotdesk_updater(resource_id, date, timeslot)
+            print(f"Document {change.document.id} was deleted.")
+        elif change.type.name == "MODIFIED":
+            doc = change.document
+            data = doc.to_dict()
+            print("Yarr booty:")
+            print(data)
+            resource_id = data["room_id"]
+            date = data["date"]
+            timeslot = data["time"]
+            
+            if data.get("is_booked") == "false":
+                hotdesk_updater(resource_id, date, timeslot)
+            
+            
+            print(f"Document {change.document.id} was modified.")
 
+def hotdesk_updater(resource_id, date, timeslot):
+            # query the next sequential booking
+            next_booking_query = (
+                    db.collection("bookings")
+                    .where(filter=FieldFilter("resource_id", "==", resource_id)) 
+                    .where(filter=FieldFilter("date", "==", date))  
+            )
+            next_bookings = next_booking_query.get()
+            if timeslot == 'Morning':
+                for booking in next_bookings:
+                    booking_data = booking.to_dict()
+                    if booking_data["time"] == 'Afternoon':
+                         db.collection("spaces").document("hotdesks").collection("hotdesk_bookings").document(booking.id).set(booking_data)
+                         print(f"Booking {booking.id} written!'.")
+          
 # Set up listener for real-time updates
-#col_query = db.collection("spaces").document("hotdesks").collection("hotdesk_bookings")
+hotdesks_query = db.collection("spaces").document("hotdesks").collection("hotdesk_bookings")
 col_query = db.collection("spaces").document("conference_rooms").collection("conference_rooms_bookings")
+# snap shot calls
 query_watch = col_query.on_snapshot(on_snapshot)
+hotdesk_query_watch = hotdesks_query.on_snapshot(my_custom_listener)
