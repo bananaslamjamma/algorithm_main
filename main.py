@@ -372,6 +372,8 @@ def my_custom_listener(doc_snapshot, changes, read_time):
     for change in changes:
         old_data = change.document._data
         old_booked = old_data["is_booked"]
+        print("old data")
+        print(old_booked)
         if change.type.name == "REMOVED":
             doc = change.document
             data = doc.to_dict()
@@ -387,7 +389,7 @@ def my_custom_listener(doc_snapshot, changes, read_time):
             doc = change.document
             data = doc.to_dict()
             
-            print("Yarr booty:")
+            print("Yarr booty Hotdesk:")
             print(data)
             resource_id = data["room_id"]
             date = data["date"]
@@ -395,7 +397,8 @@ def my_custom_listener(doc_snapshot, changes, read_time):
             
             if old_booked != data.get("is_booked") and data.get("is_booked") == "false":
                 hotdesk_updater(resource_id, date, timeslot)
-            
+            else:
+                print("No change detected!")
             
             print(f"Document {change.document.id} was modified.")
 
