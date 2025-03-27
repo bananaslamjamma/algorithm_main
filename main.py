@@ -415,7 +415,7 @@ def hotdesk_updater(resource_id, date, timeslot):
                     .where(filter=FieldFilter("date", "==", date))  
             )
             next_bookings = next_booking_query.get()
-            if timeslot == True:
+            if  True:
                 for booking in next_bookings:
                     booking_data = booking.to_dict()
                     print("Checking next booking...")
