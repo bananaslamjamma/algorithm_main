@@ -368,10 +368,13 @@ def on_snapshot(col_snapshot, changes, read_time):
                 print(f"Next booking {data["booking_id"]} at {data["start_time"]} activated!")
                 
 def my_custom_listener(doc_snapshot, changes, read_time):
+    timeslot
     
     for change in changes:
         old_data = change.document._data
         old_booked = old_data["is_booked"]
+        if old_data["time"] == 'Morning':
+            timeslot = True
         print("old data")
         print(old_booked)
         if change.type.name == "REMOVED":
@@ -381,7 +384,7 @@ def my_custom_listener(doc_snapshot, changes, read_time):
             print(data)
             resource_id = data["room_id"]
             date = data["date"]
-            timeslot = data["time"]
+            #timeslot = data["time"]
             
             hotdesk_updater(resource_id, date, timeslot)
             print(f"Document {change.document.id} was deleted.")
@@ -411,7 +414,7 @@ def hotdesk_updater(resource_id, date, timeslot):
                     .where(filter=FieldFilter("date", "==", date))  
             )
             next_bookings = next_booking_query.get()
-            if timeslot == 'Morning':
+            if timeslot == True:
                 for booking in next_bookings:
                     booking_data = booking.to_dict()
                     print("Checking next booking...")
