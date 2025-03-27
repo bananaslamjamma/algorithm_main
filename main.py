@@ -421,9 +421,9 @@ def hotdesk_updater(resource_id, date, timeslot):
                     print("Checking next booking...")
                     print(booking_data["time"])
                     if booking_data["time"] == 'Afternoon':
-                         booking_data["room_id"] = booking_data.pop("resource_id", None)  # Keeps it safe
-                         db.collection("spaces").document("hotdesks").collection("hotdesk_bookings").document("room_67890").set(booking_data)
-                         print(f"Booking {booking.id} written!'.")
+                        booking_data["room_id"] = booking_data.pop("resource_id", None)  # Keeps it safe
+                        db.collection("spaces").document("hotdesks").collection("hotdesk_bookings").document("room_67890").set(booking_data)
+                        print(f"Booking {booking.id} written!'.")
             else:
                 print("Nothing happened!")
           
