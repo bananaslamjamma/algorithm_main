@@ -368,7 +368,7 @@ def on_snapshot(col_snapshot, changes, read_time):
                 print(f"Next booking {data["booking_id"]} at {data["start_time"]} activated!")
                 
 def my_custom_listener(doc_snapshot, changes, read_time):
-    timeslot == False
+    timeslot = False
     
     for change in changes:
         old_data = change.document._data
