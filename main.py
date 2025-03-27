@@ -368,7 +368,10 @@ def on_snapshot(col_snapshot, changes, read_time):
                 print(f"Next booking {data["booking_id"]} at {data["start_time"]} activated!")
                 
 def my_custom_listener(doc_snapshot, changes, read_time):
+    
     for change in changes:
+        old_data = change.document._data
+        old_booked = old_data["is_booked"]
         if change.type.name == "REMOVED":
             doc = change.document
             data = doc.to_dict()
@@ -383,13 +386,14 @@ def my_custom_listener(doc_snapshot, changes, read_time):
         elif change.type.name == "MODIFIED":
             doc = change.document
             data = doc.to_dict()
+            
             print("Yarr booty:")
             print(data)
             resource_id = data["room_id"]
             date = data["date"]
             timeslot = data["time"]
             
-            if data.get("is_booked") == "false":
+            if old_booked != data.get("is_booked") and data.get("is_booked") == "false":
                 hotdesk_updater(resource_id, date, timeslot)
             
             
