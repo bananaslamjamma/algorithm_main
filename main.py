@@ -371,8 +371,8 @@ def my_custom_listener(doc_snapshot, changes, read_time):
     timeslot = False
     
     for change in changes:
-        old_data = change.document._data
-        old_booked = old_data["is_booked"]
+        old_data = change.document._data if hasattr(change.document, "_data") else {}
+        old_booked = old_data.get("is_booked", None)
         #old_timeslot = old_data["time"]
         if old_data["time"] == 'Morning':
             timeslot = True
@@ -421,7 +421,7 @@ def hotdesk_updater(resource_id, date, timeslot):
                     print("Checking next booking...")
                     print(booking_data["time"])
                     if booking_data["time"] == 'Afternoon':
-                         db.collection("spaces").document("hotdesks").collection("hotdesk_bookings").document(booking.id).set(booking_data)
+                         db.collection("spaces").document("hotdesks").collection("hotdesk_bookings").document("room_67890").set(booking_data)
                          print(f"Booking {booking.id} written!'.")
             else:
                 print("Nothing happened!")
