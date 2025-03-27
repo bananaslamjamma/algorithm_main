@@ -406,9 +406,12 @@ def hotdesk_updater(resource_id, date, timeslot):
             if timeslot == 'Morning':
                 for booking in next_bookings:
                     booking_data = booking.to_dict()
+                    print("Checking next booking...")
+                    print(booking_data["time"])
                     if booking_data["time"] == 'Afternoon':
                          db.collection("spaces").document("hotdesks").collection("hotdesk_bookings").document(booking.id).set(booking_data)
                          print(f"Booking {booking.id} written!'.")
+                    print("Nothing happened!")
           
 # Set up listener for real-time updates
 hotdesks_query = db.collection("spaces").document("hotdesks").collection("hotdesk_bookings")
