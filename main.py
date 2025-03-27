@@ -65,8 +65,8 @@ async def process_booking_queue(resource_id, booking_type, start_time, time, dat
         user_requests.append(data)
         user_id = data["user_id"]
         data["id"] = request.id  # Store document ID
-        print("Processing User: ", user_id)
-        print("Processing User Request: ", request.id)
+        #print("Processing User: ", user_id)
+        #print("Processing User Request: ", request.id)
         
     print("User Requests: ", user_requests)
     
@@ -395,7 +395,7 @@ def my_custom_listener(doc_snapshot, changes, read_time):
             date = data["date"]
             timeslot = data["time"]
             
-            if old_booked != data.get("is_booked") and data.get("is_booked") == "false":
+            if data.get("is_booked") == 'false':
                 hotdesk_updater(resource_id, date, timeslot)
             else:
                 print("No change detected!")
