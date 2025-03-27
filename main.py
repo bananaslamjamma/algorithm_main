@@ -368,10 +368,12 @@ def on_snapshot(col_snapshot, changes, read_time):
                 print(f"Next booking {data["booking_id"]} at {data["start_time"]} activated!")
                 
 def my_custom_listener(doc_snapshot, changes, read_time):
-    timeslot = False
+    timeslot == False
+    
     for change in changes:
         old_data = change.document._data
         old_booked = old_data["is_booked"]
+        #old_timeslot = old_data["time"]
         if old_data["time"] == 'Morning':
             timeslot = True
         print("old data")
@@ -395,7 +397,7 @@ def my_custom_listener(doc_snapshot, changes, read_time):
             print(data)
             resource_id = data["room_id"]
             date = data["date"]
-            timeslot = data["time"]
+            #timeslot = data["time"]
             
             if data.get("is_booked") == 'false':
                 print("I GOT IN")
