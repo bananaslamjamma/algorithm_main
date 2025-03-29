@@ -289,7 +289,7 @@ def parse_next_time_slot(resource_id, prev_end_time, current_booking_id, date):
     for booking in next_bookings:
         booking_data = booking.to_dict()
         print("Checking next booking...")
-        print(booking_data["time"])
+        print(booking_data)
         #if booking_data["time"] == 'Afternoon':
         #    booking_data["room_id"] = booking_data.pop("resource_id", None)  # Keeps it safe
         #    db.collection("spaces").document("hotdesks").collection("hotdesk_bookings").document("room_67890").set(booking_data)
