@@ -269,6 +269,11 @@ def parse_time(time_str):
 
 def parse_next_time_slot(resource_id, prev_end_time, current_booking_id, date):
     print("No next booking available, searching for the next available booking...")
+    print("I MADE IT")
+    print(resource_id)
+    print(prev_end_time)
+    print(current_booking_id)
+    print(date)
     fallback_query = (
         db.collection("bookings") 
         .where(filter=FieldFilter("resource_id", "==", resource_id)) 
@@ -307,6 +312,7 @@ def on_snapshot(col_snapshot, changes, read_time):
 
                 print(f"Booking ended: {doc.id}, checking next booking...")
                 print(prev_end_time)
+                print(date)
 
                 # query the next sequential booking
                 next_booking_query = (
