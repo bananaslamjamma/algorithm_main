@@ -294,30 +294,7 @@ def parse_next_time_slot(resource_id, prev_end_time, current_booking_id, date):
         if closest_time is None or stored_time < closest_time:
             closest_time = stored_time
             docs = doc   
-#remove if not used
-def parse_next_time_slot_hotdesk(resource_id, prev_end_time, current_booking_id, date):
-    print("No next booking available, searching for the next available booking...")
-    fallback_query = (
-        db.collection("bookings") 
-        .where(filter=FieldFilter("resource_id", "==", resource_id)) 
-        .where(filter=FieldFilter("booking_id", "!=", current_booking_id)) 
-        .where(filter=FieldFilter("date", "==", date)) 
-        )
-    docs = fallback_query.get()
-    closest_time = None
-    print("I did the query")
-    print(fallback_query)  # ✅ Prints the list of DocumentSnapshots
-
-    fallback_docs = list(fallback_query)  # ✅ Convert query results to list
-    print(f"Found {len(fallback_docs)} documents")
-                    
-    for doc in fallback_query:
-        data = doc.to_dict()
-        stored_time = parse_time(data["start_time"])                        
-        if closest_time is None or stored_time < closest_time:
-            closest_time = stored_time
-            docs = doc   
-        
+            
 def on_snapshot(col_snapshot, changes, read_time):
     #Firestore listener callback: Checks for the next sequential booking
     for change in changes:
@@ -351,7 +328,7 @@ def on_snapshot(col_snapshot, changes, read_time):
                 print(prev_end_time)
                 
                 # this is not working
-                #parse_next_time_slot(resource_id, prev_end_time, current_booking_id, date)
+                parse_next_time_slot(resource_id, prev_end_time, current_booking_id, date)
                                                                                      
                 if len(docs) == 0: 
                     print("No next booking available, breaking...")
