@@ -121,12 +121,7 @@ async def process_booking_queue(resource_id, booking_type, start_time, time, dat
 
 def update_space_data(resource_id, best_request):
     print("Function entered!")
-    room_type = best_request["booking_type"]
-    #try:
-    #    day_of_time = best_request["time"]
-    #except KeyError:
-    #    day_of_time = "None"  # Default value
-           
+    room_type = best_request["booking_type"]     
     fmt = "%H:%M"
     start = datetime.strptime(best_request["start_time"], fmt)
     end = datetime.strptime(best_request["end_time"], fmt)
@@ -283,9 +278,9 @@ def parse_next_time_slot(resource_id, prev_end_time, current_booking_id, date):
     docs = fallback_query.get()
     closest_time = None
     print("I did the query")
-    print(fallback_query)  # ✅ Prints the list of DocumentSnapshots
+    print(fallback_query)  
 
-    fallback_docs = list(fallback_query)  # ✅ Convert query results to list
+    fallback_docs = list(fallback_query) 
     print(f"Found {len(fallback_docs)} documents")
                     
     for doc in fallback_query:
