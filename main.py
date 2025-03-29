@@ -277,23 +277,30 @@ def parse_next_time_slot(resource_id, prev_end_time, current_booking_id, date):
     fallback_query = (
         db.collection("bookings") 
         .where(filter=FieldFilter("resource_id", "==", resource_id)) 
-        .where(filter=FieldFilter("booking_id", "!=", current_booking_id)) 
         .where(filter=FieldFilter("date", "==", date)) 
         )
-    docs = fallback_query.get()
+    print("I did the query")  
+    next_bookings = fallback_query.get()
     closest_time = None
-    print("I did the query")
-    print(fallback_query)  
 
-    fallback_docs = list(fallback_query) 
-    print(f"Found {len(fallback_docs)} documents")
+    #fallback_docs = list(fallback_query) 
+    #print(f"Found {len(fallback_docs)} documents")
+    
+    for booking in next_bookings:
+        booking_data = booking.to_dict()
+        print("Checking next booking...")
+        print(booking_data["time"])
+        #if booking_data["time"] == 'Afternoon':
+        #    booking_data["room_id"] = booking_data.pop("resource_id", None)  # Keeps it safe
+        #    db.collection("spaces").document("hotdesks").collection("hotdesk_bookings").document("room_67890").set(booking_data)
+        #    print(f"Booking {booking.id} written!'.")
                     
-    for doc in fallback_query:
-        data = doc.to_dict()
-        stored_time = parse_time(data["start_time"])                        
-        if closest_time is None or stored_time < closest_time:
-            closest_time = stored_time
-            docs = doc   
+    #for doc in fallback_query:
+    #    data = doc.to_dict()
+    #    stored_time = parse_time(data["start_time"])                        
+    #    if closest_time is None or stored_time < closest_time:
+    #        closest_time = stored_time
+    #        docs = doc   
             
 def on_snapshot(col_snapshot, changes, read_time):
     #Firestore listener callback: Checks for the next sequential booking
