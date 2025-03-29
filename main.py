@@ -267,11 +267,10 @@ def delete_temp():
 def parse_time(time_str):
     return datetime.strptime(time_str, "%H:%M").time()
 
-def parse_next_time_slot(resource_id, prev_end_time, current_booking_id, date):
+def parse_next_time_slot(resource_id, current_booking_id, date):
     print("No next booking available, searching for the next available booking...")
     print("I MADE IT")
     print(resource_id)
-    print(prev_end_time)
     print(current_booking_id)
     print(date)
     fallback_query = (
@@ -331,9 +330,7 @@ def on_snapshot(col_snapshot, changes, read_time):
                 next_booking_query = (
                     db.collection("bookings")
                     .where(filter=FieldFilter("resource_id", "==", resource_id))
-                    .where(filter=FieldFilter("start_time", "==", prev_end_time)) 
                     .where(filter=FieldFilter("date", "==", date))  
-                    .limit(1)
                 )
                 docs = next_booking_query.get()
                 prev_time_str = prev_end_time
@@ -342,20 +339,20 @@ def on_snapshot(col_snapshot, changes, read_time):
                 print(prev_end_time)
                 
                 # this is not working
-                parse_next_time_slot(resource_id, prev_end_time, current_booking_id, date)
+                parse_next_time_slot(resource_id, current_booking_id, date)
                                                                                      
                 if len(docs) == 0: 
                     print("No next booking available, breaking...")
                     return 
                 
-                for doc in docs:  
-                    data = doc.to_dict()  
-                    print(data)  
+                #for doc in docs:  
+                #    data = doc.to_dict()  
+                #    print(data)  
                 
                     
-                update_space_data(resource_id, data)
+                #update_space_data(resource_id, data)
                 # delete the old entry after being done with it
-                db.collection("bookings").document(doc.id).delete()
+                #db.collection("bookings").document(doc.id).delete()
                 print(f"Next booking {data["booking_id"]} at {data["start_time"]} activated!")
                 
 def my_custom_listener(doc_snapshot, changes, read_time):
