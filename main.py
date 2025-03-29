@@ -285,16 +285,22 @@ def parse_next_time_slot(resource_id, prev_end_time, current_booking_id, date):
 
     #fallback_docs = list(fallback_query) 
     #print(f"Found {len(fallback_docs)} documents")
+    found_booking_data = {}
     
     for booking in next_bookings:
         booking_data = booking.to_dict()
         print("Checking next booking...")
         print(booking_data)
-        #if booking_data["time"] == 'Afternoon':
-        #    booking_data["room_id"] = booking_data.pop("resource_id", None)  # Keeps it safe
+        stored_time = parse_time(booking_data["start_time"])                        
+        if closest_time is None or stored_time < closest_time:
+            closest_time = stored_time
+            found_booking_data = booking_data   
         #    db.collection("spaces").document("hotdesks").collection("hotdesk_bookings").document("room_67890").set(booking_data)
         #    print(f"Booking {booking.id} written!'.")
-                    
+    print("The found booking data:")
+    print(found_booking_data)
+    db.collection("spaces").document("conference_rooms").collection("conference_rooms_bookings").document(resource_id).set(booking_data)
+    print(f"Conference Booking {booking.id} written!'.")                 
     #for doc in fallback_query:
     #    data = doc.to_dict()
     #    stored_time = parse_time(data["start_time"])                        
