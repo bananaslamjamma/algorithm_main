@@ -298,11 +298,9 @@ def parse_next_time_slot(resource_id, current_booking_id, date):
         #    print(f"Booking {booking.id} written!'.")
     print("The found booking data:")
     print(found_booking_data)
-    booking_data["booking_id"] = "empty"
-    booking_data["status"] = "empty"
+    booking_data["status"] = "unauthorized"
     booking_data["time"] = ""
-    booking_data["user_id"] = "empty"
-    booking_data["is_booked"] = 'false'
+    booking_data["is_booked"] = 'true'
     db.collection("spaces").document("conference_rooms").collection("conference_rooms_bookings").document(resource_id).set(found_booking_data)
     print(f"Conference Booking {booking.id} written!'.")                 
             
