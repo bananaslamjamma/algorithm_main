@@ -383,6 +383,7 @@ def my_custom_listener(doc_snapshot, changes, read_time):
             
             if data.get("is_booked") == 'false' and data.get("user_id") != 'empty':
                 print("I GOT IN")
+                time.sleep(3)
                 hotdesk_updater(resource_id, date, timeslot)
             else:
                 print("No change detected!")
