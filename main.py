@@ -298,7 +298,12 @@ def parse_next_time_slot(resource_id, current_booking_id, date):
         #    print(f"Booking {booking.id} written!'.")
     print("The found booking data:")
     print(found_booking_data)
-    db.collection("spaces").document("conference_rooms").collection("conference_rooms_bookings").document(resource_id).set(booking_data)
+    booking_data["booking_id"] = "empty"
+    booking_data["status"] = "empty"
+    booking_data["time"] = ""
+    booking_data["user_id"] = "empty"
+    booking_data["is_booked"] = 'false'
+    db.collection("spaces").document("conference_rooms").collection("conference_rooms_bookings").document(resource_id).set(found_booking_data)
     print(f"Conference Booking {booking.id} written!'.")                 
             
 def on_snapshot(col_snapshot, changes, read_time):
@@ -332,7 +337,7 @@ def on_snapshot(col_snapshot, changes, read_time):
                 prev_end_time = datetime.strptime(prev_time_str, time_format)
                 print(prev_end_time)
                 
-                # this is not working
+                time.sleep(2.5)
                 parse_next_time_slot(resource_id, current_booking_id, date)
                                                                                      
                 if len(docs) == 0: 
