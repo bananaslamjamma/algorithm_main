@@ -413,6 +413,7 @@ def hotdesk_updater(resource_id, date, timeslot):
                     else:
                         booking_data["booking_id"] = "empty"
                         booking_data["status"] = "empty"
+                        booking_data["time"] = ""
                         booking_data["user_id"] = "empty"
                         booking_data["is_booked"] = 'false'
                         db.collection("spaces").document("hotdesks").collection("hotdesk_bookings").document("room_67890").set(booking_data)
