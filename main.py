@@ -138,7 +138,7 @@ def update_space_data(resource_id, best_request):
         "status": "unauthorized",
         "is_booked": "true",
         "booking_id": best_request["booking_id"],
-        "timeout": 60,
+        "timeout": 30,
         'time': best_request["time"]
     }
     
