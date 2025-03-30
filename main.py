@@ -387,8 +387,6 @@ def my_custom_listener(doc_snapshot, changes, read_time):
             else:
                 print("No change detected!")
                 
-            if data.get("user_id") == 'empty':
-                db.collection("spaces").document("hotdesks").collection("hotdesk_bookings").document("room_67890").update({"is_booked": 'false'})
                 
             
             print(f"Document {change.document.id} was modified.")
