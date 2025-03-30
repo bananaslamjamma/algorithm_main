@@ -300,12 +300,6 @@ def parse_next_time_slot(resource_id, current_booking_id, date):
     print(found_booking_data)
     db.collection("spaces").document("conference_rooms").collection("conference_rooms_bookings").document(resource_id).set(booking_data)
     print(f"Conference Booking {booking.id} written!'.")                 
-    #for doc in fallback_query:
-    #    data = doc.to_dict()
-    #    stored_time = parse_time(data["start_time"])                        
-    #    if closest_time is None or stored_time < closest_time:
-    #        closest_time = stored_time
-    #        docs = doc   
             
 def on_snapshot(col_snapshot, changes, read_time):
     #Firestore listener callback: Checks for the next sequential booking
@@ -410,6 +404,8 @@ def hotdesk_updater(resource_id, date, timeslot):
                     print(booking_data["time"])
                     if booking_data["time"] == 'Afternoon':
                         booking_data["room_id"] = booking_data.pop("resource_id", None)  # Keeps it safe
+                        booking_data["is_booked"] = "true"
+                        booking_data["status"] = "unauthorized"
                         db.collection("spaces").document("hotdesks").collection("hotdesk_bookings").document("room_67890").set(booking_data)
                         print(f"Booking {booking.id} written!'.")
             else:
