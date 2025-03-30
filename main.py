@@ -298,9 +298,9 @@ def parse_next_time_slot(resource_id, current_booking_id, date):
         #    print(f"Booking {booking.id} written!'.")
     print("The found booking data:")
     print(found_booking_data)
-    booking_data["status"] = "unauthorized"
-    booking_data["time"] = ""
-    booking_data["is_booked"] = 'true'
+    found_booking_data["status"] = "unauthorized"
+    found_booking_data["time"] = ""
+    found_booking_data["is_booked"] = 'true'
     db.collection("spaces").document("conference_rooms").collection("conference_rooms_bookings").document(resource_id).set(found_booking_data)
     print(f"Conference Booking {booking.id} written!'.")                 
             
@@ -314,7 +314,7 @@ def on_snapshot(col_snapshot, changes, read_time):
             print(data)
 
             if data.get("is_booked") == "false":  # check if status changed to False
-                resource_id = data["room_id"]
+                resource_id = data.get("room_id", data.get("resource_id", ""))
                 prev_end_time = data["end_time"]
                 date = data["date"]
                 current_booking_id = data["booking_id"]
