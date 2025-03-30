@@ -302,7 +302,7 @@ def parse_next_time_slot(resource_id, current_booking_id, date):
     found_booking_data["time"] = ""
     found_booking_data["is_booked"] = 'true'
     db.collection("spaces").document("conference_rooms").collection("conference_rooms_bookings").document(resource_id).set(found_booking_data)
-    print(f"Conference Booking {booking.id} written!'.")                 
+    print(f"Conference Booking {found_booking_data["booking_id"]} written!'.")                 
             
 def on_snapshot(col_snapshot, changes, read_time):
     #Firestore listener callback: Checks for the next sequential booking
