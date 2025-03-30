@@ -377,7 +377,7 @@ def my_custom_listener(doc_snapshot, changes, read_time):
             
             print("Yarr booty Hotdesk:")
             print(data)
-            resource_id = data["room_id"]
+            resource_id = data.get("room_id", data.get("resource_id", ""))
             date = data["date"]
             #timeslot = data["time"]
             
