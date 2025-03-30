@@ -381,7 +381,7 @@ def my_custom_listener(doc_snapshot, changes, read_time):
             date = data["date"]
             #timeslot = data["time"]
             
-            if data.get("is_booked") == 'false':
+            if data.get("is_booked") == 'false' and data.get("user_id") != 'empty':
                 print("I GOT IN")
                 hotdesk_updater(resource_id, date, timeslot)
             else:
@@ -410,6 +410,12 @@ def hotdesk_updater(resource_id, date, timeslot):
                         booking_data["status"] = "unauthorized"
                         db.collection("spaces").document("hotdesks").collection("hotdesk_bookings").document("room_67890").set(booking_data)
                         print(f"Booking {booking.id} written!'.")
+                    else:
+                        booking_data["booking_id"] = "empty"
+                        booking_data["status"] = "empty"
+                        booking_data["user_id"] = "empty"
+                        booking_data["is_booked"] = 'false'
+                        db.collection("spaces").document("hotdesks").collection("hotdesk_bookings").document("room_67890").set(booking_data)
             else:
                 print("Nothing happened!")
           
