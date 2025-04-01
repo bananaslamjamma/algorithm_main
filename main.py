@@ -382,7 +382,7 @@ def hotdesk_updater(resource_id, date, timeslot):
                         booking_data["room_id"] = booking_data.pop("resource_id", None)  # Keeps it safe
                         booking_data["is_booked"] = "true"
                         booking_data["status"] = "unauthorized"
-                        db.collection("spaces").document("hotdesks").collection("hotdesk_bookings").document("room_67890").set(booking_data)
+                        db.collection("spaces").document("hotdesks").collection("hotdesk_bookings").document(resource_id).set(booking_data)
                         print(f"Booking {booking.id} written!'.")
                     else:
                         booking_data["booking_id"] = "empty"
@@ -390,7 +390,7 @@ def hotdesk_updater(resource_id, date, timeslot):
                         booking_data["time"] = ""
                         booking_data["user_id"] = "empty"
                         booking_data["is_booked"] = 'false'
-                        db.collection("spaces").document("hotdesks").collection("hotdesk_bookings").document("room_67890").set(booking_data)
+                        db.collection("spaces").document("hotdesks").collection("hotdesk_bookings").document(resource_id).set(booking_data)
             else:
                 print("Nothing happened!")
           
