@@ -17,22 +17,20 @@ from google.cloud.firestore import FieldFilter
 service_account_info = json.loads(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON"))
 cred = credentials.Certificate(service_account_info)
 firebase_admin.initialize_app(cred)
-#change to async later?
 db = firestore.client()
 
 app = FastAPI()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("uvicorn.error")
 
-PENDING_TIME = 5  # Time window to collect requests (seconds)
-booking_queues = {}  # Dictionary to track queues per resource
+PENDING_TIME = 5  # time window to collect requests (seconds)
+booking_queues = {}  # dictionary to track queues per resource
 
 async def process_booking_queue(resource_id, booking_type, start_time, time, date):
-    # Process all the queued requests
+    # process all the queued requests
     await sleep_with_progress()
     
     print("Fetching Requests Stored...")
-    # Fetch all requests for this resource
     # this should separate requests accordingly and not bundle them together
     if booking_type == 'Hotdesk':
         requests = list(db.collection("bookings")
@@ -53,7 +51,7 @@ async def process_booking_queue(resource_id, booking_type, start_time, time, dat
     print(all_requests)
 
     if not requests:
-        return  # No requests to process
+        return  
 
     user_requests = []
     user_request_count = {}
@@ -64,10 +62,8 @@ async def process_booking_queue(resource_id, booking_type, start_time, time, dat
         data = request.to_dict()
         user_requests.append(data)
         user_id = data["user_id"]
-        data["id"] = request.id  # Store document ID
-        #print("Processing User: ", user_id)
-        #print("Processing User Request: ", request.id)
-        
+        data["id"] = request.id 
+
     print("User Requests: ", user_requests)
     
     print("Checking Multiple Users")
@@ -87,7 +83,6 @@ async def process_booking_queue(resource_id, booking_type, start_time, time, dat
     print("Processing Queue...")
     if heap:
         _, _, best_request = heapq.heappop(heap)
-        # Approve the best request
         db.collection("bookings").document(best_request["id"]).update({"status": "approved"})
         print("User won! " , best_request["user_id"])
     print("is this empty?")
@@ -126,9 +121,6 @@ def update_space_data(resource_id, best_request):
     start = datetime.strptime(best_request["start_time"], fmt)
     end = datetime.strptime(best_request["end_time"], fmt)
     difference = int((end - start).total_seconds() / 60)
-    # default
-    #doc_ref = db.collection("spaces").document("hotdesks").collection("hotdesk_bookings").document(resource_id)
-    #doc = doc_ref.get()
     
     space_data_hotdesks = {
         # change this to be user booked
@@ -169,7 +161,7 @@ def update_space_data(resource_id, best_request):
         
     
     if not doc.exists:
-        # Create the document with a default structure
+        # create the document with a default structure
          doc_ref.set({}, merge=True)
         
     doc_ref.update(data_type)  # Update fields
@@ -219,22 +211,16 @@ async def book_desk(data: dict, background_tasks: BackgroundTasks):
     
         if any(existing_booking):
             print("Resource already booked!")
-            #return {"message": "Booking failed. Resource already booked.", "status": "denied"}
-        
-        # get firestore server timestamp
-        # data["timestamp"] = firestore.SERVER_TIMESTAMP
-
-        # store request in Firestore temporarily
-        # db.collection("bookings").add(data)
+            
         db.collection('temp').add(data)
         doc_ref = db.collection("bookings").document()
         booking_id = doc_ref.id
         booking_data["booking_id"] = booking_id
-        doc_ref.set(booking_data)  # Using set() to overwrite any existing document with the same ID
+        doc_ref.set(booking_data)  
         
         booking_key = (resource_id, booking_type, start_time, time, date)
 
-        # start a background task to process bookings after 10 seconds
+        # start a background task to process bookings after 5 seconds
         if resource_id not in booking_queues:
             booking_queues[resource_id, booking_type, start_time, time, date] = asyncio.create_task(process_booking_queue(resource_id, booking_type, start_time, time, date))
             
@@ -269,7 +255,6 @@ def parse_time(time_str):
 
 def parse_next_time_slot(resource_id, current_booking_id, date):
     print("No next booking available, searching for the next available booking...")
-    print("I MADE IT")
     print(resource_id)
     print(current_booking_id)
     print(date)
@@ -278,12 +263,9 @@ def parse_next_time_slot(resource_id, current_booking_id, date):
         .where(filter=FieldFilter("resource_id", "==", resource_id)) 
         .where(filter=FieldFilter("date", "==", date)) 
         )
-    print("I did the query")  
     next_bookings = fallback_query.get()
     closest_time = None
 
-    #fallback_docs = list(fallback_query) 
-    #print(f"Found {len(fallback_docs)} documents")
     found_booking_data = {}
     
     for booking in next_bookings:
@@ -319,10 +301,6 @@ def on_snapshot(col_snapshot, changes, read_time):
                 date = data["date"]
                 current_booking_id = data["booking_id"]
 
-                print(f"Booking ended: {doc.id}, checking next booking...")
-                print(prev_end_time)
-                print(date)
-
                 # query the next sequential booking
                 next_booking_query = (
                     db.collection("bookings")
@@ -341,15 +319,7 @@ def on_snapshot(col_snapshot, changes, read_time):
                 if len(docs) == 0: 
                     print("No next booking available, breaking...")
                     return 
-                
-                #for doc in docs:  
-                #    data = doc.to_dict()  
-                #    print(data)  
-                
-                    
-                #update_space_data(resource_id, data)
-                # delete the old entry after being done with it
-                #db.collection("bookings").document(doc.id).delete()
+
                 print(f"Next booking {data["booking_id"]} at {data["start_time"]} activated!")
                 
 def my_custom_listener(doc_snapshot, changes, read_time):
@@ -424,7 +394,7 @@ def hotdesk_updater(resource_id, date, timeslot):
             else:
                 print("Nothing happened!")
           
-# Set up listener for real-time updates
+# listener for real-time updates
 hotdesks_query = db.collection("spaces").document("hotdesks").collection("hotdesk_bookings")
 col_query = db.collection("spaces").document("conference_rooms").collection("conference_rooms_bookings")
 # snap shot calls
