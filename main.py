@@ -329,7 +329,7 @@ def my_custom_listener(doc_snapshot, changes, read_time):
         old_data = change.document._data if hasattr(change.document, "_data") else {}
         old_booked = old_data.get("is_booked", None)
         #old_timeslot = old_data["time"]
-        if old_data["time"] == 'Morning':
+        if old_data.get("time") == 'Morning':
             timeslot = True
         print("old data")
         print(old_booked)
